@@ -12,6 +12,7 @@ import CoreAudio
 public typealias MIDIByte = UInt8
 public typealias MIDIWord = UInt16
 public typealias MIDINoteNumber = UInt8
+public typealias HarmonicNoteNumber = UInt16
 public typealias MIDIVelocity = UInt8
 public typealias MIDIChannel = UInt8
 

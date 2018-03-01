@@ -20,9 +20,9 @@
 @property (nonatomic) float vibratoDepth;
 @property (nonatomic) float vibratoRate;
 
-- (void)startNote:(uint8_t)note velocity:(uint8_t)velocity;
-- (void)startNote:(uint8_t)note velocity:(uint8_t)velocity frequency:(float)frequency;
-- (void)stopNote:(uint8_t)note;
+- (void)startNote:(uint16_t)note velocity:(uint8_t)velocity;
+- (void)startNote:(uint16_t)note velocity:(uint8_t)velocity frequency:(float)frequency;
+- (void)stopNote:(uint16_t)note;
 
 @end
 
@@ -55,9 +55,9 @@
 - (void)setPitchBend:(float)pitchBend { _kernel.setPitchBend(pitchBend); } \
 - (void)setVibratoDepth:(float)vibratoDepth { _kernel.setVibratoDepth(vibratoDepth); } \
 - (void)setVibratoRate:(float)vibratoRate { _kernel.setVibratoRate(vibratoRate); } \
-- (void)stopNote:(uint8_t)note { _kernel.stopNote(note); } \
-- (void)startNote:(uint8_t)note velocity:(uint8_t)velocity { _kernel.startNote(note, velocity); } \
-- (void)startNote:(uint8_t)note velocity:(uint8_t)velocity frequency:(float)frequency { \
+- (void)stopNote:(uint16_t)note { _kernel.stopNote(note); } \
+- (void)startNote:(uint16_t)note velocity:(uint8_t)velocity { _kernel.startNote(note, velocity); } \
+- (void)startNote:(uint16_t)note velocity:(uint8_t)velocity frequency:(float)frequency { \
     _kernel.startNote(note, velocity, frequency); \
 }
 

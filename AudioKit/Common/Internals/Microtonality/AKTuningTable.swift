@@ -6,6 +6,18 @@
 //  Copyright © 2017 AudioKit. All rights reserved.
 //
 
+@objc open class BSTuningTable: NSObject {
+    private static var frequencies: [Double] = []
+    
+    open static func setFrequencies(frequencies: [Double]) {
+        BSTuningTable.frequencies = frequencies
+    }
+    
+    static func frequencyForHarmonicNoteNumber(noteNumber: HarmonicNoteNumber) -> Double {
+        return frequencies[Int(noteNumber)]
+    }
+}
+
 /// helper object to simulate a Swift tuple for ObjC interoperability
 @objc open class AKTuningTableETNN: NSObject {
     @objc public var nn: MIDINoteNumber = 60

@@ -29,14 +29,14 @@ standardBankFunctions()
     _kernel.setWaveformValue(index, value);
 }
 
-//- (void)startNote:(uint8_t)note velocity:(uint8_t)velocity {
+//- (void)startNote:(uint16_t)note velocity:(uint8_t)velocity {
 //    _kernel.startNote(note, velocity);
 //}
-//- (void)startNote:(uint8_t)note velocity:(uint8_t)velocity frequency:(float)frequency {
+//- (void)startNote:(uint16_t)note velocity:(uint8_t)velocity frequency:(float)frequency {
 //    _kernel.startNote(note, velocity, frequency);
 //}
 //
-//- (void)stopNote:(uint8_t)note {
+//- (void)stopNote:(uint16_t)note {
 //    _kernel.stopNote(note);
 //}
 //

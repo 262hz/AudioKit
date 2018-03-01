@@ -134,7 +134,8 @@ public:
     // MARK: Member Functions
 
     AKFMOscillatorBankDSPKernel() {
-        noteStates.resize(128);
+        //NOTE: we might need more harmonic notes in the future, but for now this should be good.
+        noteStates.resize(1024);
         for (NoteState& state : noteStates) {
             state.kernel = this;
         }

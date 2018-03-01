@@ -61,7 +61,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - velocity:   MIDI velocity
     ///   - channel:    MIDI channel
     ///
-    open func receivedMIDINoteOn(_ noteNumber: MIDINoteNumber,
+    open func receivedMIDINoteOn(_ noteNumber: HarmonicNoteNumber,
                                  velocity: MIDIVelocity,
                                  channel: MIDIChannel) {
         if velocity > 0 {
@@ -78,7 +78,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - velocity:   MIDI velocity
     ///   - channel:    MIDI channel
     ///
-    open func receivedMIDINoteOff(noteNumber: MIDINoteNumber, velocity: MIDIVelocity, channel: MIDIChannel) {
+    open func receivedMIDINoteOff(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity, channel: MIDIChannel) {
         stop(noteNumber: noteNumber, channel: channel)
     }
 
@@ -91,7 +91,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - velocity:   Velocity at which to play the note (0 - 127)
     ///   - channel:    Channel on which to play the note
     ///
-    @objc open func start(noteNumber: MIDINoteNumber,
+    @objc open func start(noteNumber: HarmonicNoteNumber,
                           velocity: MIDIVelocity,
                           channel: MIDIChannel) {
         play(noteNumber: noteNumber, velocity: velocity)
@@ -103,7 +103,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - noteNumber: Note number to stop
     ///   - channel:    Channel on which to stop the note
     ///
-    @objc open func stop(noteNumber: MIDINoteNumber, channel: MIDIChannel) {
+    @objc open func stop(noteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
         // OVerride in subclass
     }
 
@@ -114,11 +114,11 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
         let status = data1 >> 4
         let channel = data1 & 0xF
         if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 > 0 {
-            start(noteNumber: MIDINoteNumber(data2),
+            start(noteNumber: HarmonicNoteNumber(data2),
                   velocity: MIDIVelocity(data3),
                   channel: MIDIChannel(channel))
         } else if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 == 0 {
-            stop(noteNumber: MIDINoteNumber(data2), channel: MIDIChannel(channel))
+            stop(noteNumber: HarmonicNoteNumber(data2), channel: MIDIChannel(channel))
         }
     }
 }

@@ -242,12 +242,12 @@ open class AKOscillatorBank: AKPolyphonicNode, AKComponent {
     // MARK: - AKPolyphonic
 
     // Function to start, play, or activate the node at frequency
-    open override func play(noteNumber: MIDINoteNumber, velocity: MIDIVelocity, frequency: Double) {
+    open override func play(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity, frequency: Double) {
         internalAU?.startNote(noteNumber, velocity: velocity, frequency: Float(frequency))
     }
 
     /// Function to stop or bypass the node, both are equivalent
-    open override func stop(noteNumber: MIDINoteNumber) {
+    open override func stop(noteNumber: HarmonicNoteNumber) {
         internalAU?.stopNote(noteNumber)
     }
 }

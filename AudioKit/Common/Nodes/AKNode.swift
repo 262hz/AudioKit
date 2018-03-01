@@ -70,7 +70,7 @@ public protocol AKPolyphonic {
     ///   - noteNumber: MIDI Note Number
     ///   - velocity:   MIDI Velocity
     ///   - frequency:  Play this frequency
-    func play(noteNumber: MIDINoteNumber, velocity: MIDIVelocity, frequency: Double)
+    func play(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity, frequency: Double)
 
     /// Play a sound corresponding to a MIDI note
     ///
@@ -78,13 +78,13 @@ public protocol AKPolyphonic {
     ///   - noteNumber: MIDI Note Number
     ///   - velocity:   MIDI Velocity
     ///
-    func play(noteNumber: MIDINoteNumber, velocity: MIDIVelocity)
+    func play(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity)
 
     /// Stop a sound corresponding to a MIDI note
     ///
     /// - parameter noteNumber: MIDI Note Number
     ///
-    func stop(noteNumber: MIDINoteNumber)
+    func stop(noteNumber: HarmonicNoteNumber)
 }
 
 /// Bare bones implementation of AKPolyphonic protocol
@@ -101,7 +101,7 @@ public protocol AKPolyphonic {
     ///   - velocity:   MIDI Velocity
     ///   - frequency:  Play this frequency
     ///
-    @objc open func play(noteNumber: MIDINoteNumber, velocity: MIDIVelocity, frequency: Double) {
+    @objc open func play(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity, frequency: Double) {
         AKLog("Playing note: \(noteNumber), velocity: \(velocity), frequency: \(frequency), override in subclass")
     }
 
@@ -111,11 +111,14 @@ public protocol AKPolyphonic {
     ///   - noteNumber: MIDI Note Number
     ///   - velocity:   MIDI Velocity
     ///
-    @objc open func play(noteNumber: MIDINoteNumber, velocity: MIDIVelocity) {
+    @objc open func play(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity) {
 
         // MARK: Microtonal pitch lookup
         // default implementation is 12 ET
-        let frequency = AKPolyphonicNode.tuningTable.frequency(forNoteNumber: noteNumber)
+        
+        let frequency = BSTuningTable.frequencyForHarmonicNoteNumber(noteNumber: noteNumber)
+        // original code (using AKTuningTable)
+        //let frequency = AKPolyphonicNode.tuningTable.frequency(forNoteNumber: noteNumber)
         //        AKLog("Playing note: \(noteNumber), velocity: \(velocity), using tuning table frequency: \(frequency)")
         self.play(noteNumber: noteNumber, velocity: velocity, frequency: frequency)
     }
@@ -124,7 +127,7 @@ public protocol AKPolyphonic {
     ///
     /// - parameter noteNumber: MIDI Note Number
     ///
-    @objc open func stop(noteNumber: MIDINoteNumber) {
+    @objc open func stop(noteNumber: HarmonicNoteNumber) {
         AKLog("Stopping note \(noteNumber), override in subclass")
     }
 }

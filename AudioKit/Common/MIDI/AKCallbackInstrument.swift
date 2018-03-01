@@ -7,7 +7,7 @@
 //
 
 /// Function type for MIDI callbacks
-public typealias AKMIDICallback = (AKMIDIStatus, MIDINoteNumber, MIDIVelocity) -> Void
+public typealias AKMIDICallback = (AKMIDIStatus, HarmonicNoteNumber, MIDIVelocity) -> Void
 
 /// MIDI Instrument that triggers functions on MIDI note on/off commands
 open class AKCallbackInstrument: AKMIDIInstrument {
@@ -32,7 +32,7 @@ open class AKCallbackInstrument: AKMIDIInstrument {
     }
 
     fileprivate func triggerCallbacks(_ status: AKMIDIStatus,
-                                      noteNumber: MIDINoteNumber,
+                                      noteNumber: HarmonicNoteNumber,
                                       velocity: MIDIVelocity) {
         _ = callback.map { $0(status, noteNumber, velocity) }
     }
@@ -44,7 +44,7 @@ open class AKCallbackInstrument: AKMIDIInstrument {
     ///   - velocity:   MIDI Velocity (0-127)
     ///   - channel:    MIDI Channel
     ///
-    override open func start(noteNumber: MIDINoteNumber,
+    override open func start(noteNumber: HarmonicNoteNumber,
                              velocity: MIDIVelocity,
                              channel: MIDIChannel) {
         triggerCallbacks(.noteOn, noteNumber: noteNumber, velocity: velocity)
@@ -56,7 +56,7 @@ open class AKCallbackInstrument: AKMIDIInstrument {
     ///   - noteNumber: MIDI Note Number being stopped
     ///   - channel:    MIDI Channel
     ///
-    override open func stop(noteNumber: MIDINoteNumber, channel: MIDIChannel) {
+    override open func stop(noteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
         triggerCallbacks(.noteOff, noteNumber: noteNumber, velocity: 0)
     }
 }

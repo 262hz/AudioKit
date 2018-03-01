@@ -61,7 +61,7 @@ open class AKMIDINode: AKNode, AKMIDIListener {
     // Send MIDI data to the audio unit
     func handleMIDI(data1: MIDIByte, data2: MIDIByte, data3: MIDIByte) {
         let status = Int(data1 >> 4)
-        let noteNumber = MIDINoteNumber(data2)
+        let noteNumber = HarmonicNoteNumber(data2)
         let velocity = MIDIVelocity(data3)
 
         if status == AKMIDIStatus.noteOn.rawValue && velocity > 0 {
@@ -80,7 +80,7 @@ open class AKMIDINode: AKNode, AKMIDIListener {
     ///   - velocity:   MIDI velocity
     ///   - channel:    MIDI channel
     ///
-    open func receivedMIDINoteOn(_ noteNumber: MIDINoteNumber,
+    open func receivedMIDINoteOn(_ noteNumber: HarmonicNoteNumber,
                                  velocity: MIDIVelocity,
                                  channel: MIDIChannel) {
         if velocity > 0 {
