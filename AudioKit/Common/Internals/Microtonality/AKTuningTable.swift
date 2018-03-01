@@ -9,6 +9,7 @@
 @objc open class BSTuningTable: NSObject {
     private static var frequencies: [Double] = []
     
+    //NOTE: frequencies must be set by the app – the numbering up to you.
     open static func setFrequencies(frequencies: [Double]) {
         BSTuningTable.frequencies = frequencies
     }
