@@ -157,7 +157,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     /// Start a note
     ///
     /// - Parameters:
-    ///   - noteNumber: Note number to play
+    ///   - harmonicNoteNumber: Note number to play
     ///   - velocity:   Velocity at which to play the note (0 - 127)
     ///   - channel:    Channel on which to play the note
     ///
@@ -171,7 +171,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     /// Stop a note
     ///
     /// - Parameters:
-    ///   - noteNumber: Note number to stop
+    ///   - harmonicNoteNumber: Note number to stop
     ///   - channel:    Channel on which to stop the note
     ///
     @objc open func stop(harmonicNoteNumber: HarmonicNoteNumber,
