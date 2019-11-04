@@ -31,16 +31,18 @@ open class AKSynthKick: AKMIDIInstrument {
         avAudioNode = filter.avAudioNode
         generator.start()
     }
+    
+    //TODO: regular midi functions?
 
     /// Function to start, play, or activate the node, all do the same thing
-    open override func play(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity) {
+    open override func play(harmonicNoteNumber: HarmonicNoteNumber, velocity: MIDIVelocity) {
         filter.cutoffFrequency = (Double(velocity) / 127.0 * 366.0) + 300.0
         filter.resonance = 1.0 - Double(velocity) / 127.0
         generator.trigger()
     }
 
     /// Unneeded stop function since the sounds all decay quickly
-    open override func stop(noteNumber: HarmonicNoteNumber) {
+    open override func stop(harmonicNoteNumber: HarmonicNoteNumber) {
         // Unneeded
     }
 }
@@ -84,15 +86,17 @@ open class AKSynthSnare: AKMIDIInstrument {
             filter.resonance = resonance
         }
     }
+    
+    //TODO: regular midi functions?
 
     /// Function to start, play, or activate the node, all do the same thing
-    open override func play(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity) {
+    open override func play(harmonicNoteNumber: HarmonicNoteNumber, velocity: MIDIVelocity) {
         cutoff = (Double(velocity) / 127.0 * 1_600.0) + 300.0
         generator.trigger()
     }
 
     /// Unneeded stop function since the sounds all decay quickly
-    open override func stop(noteNumber: HarmonicNoteNumber) {
+    open override func stop(harmonicNoteNumber: HarmonicNoteNumber) {
         // Unneeded
     }
 

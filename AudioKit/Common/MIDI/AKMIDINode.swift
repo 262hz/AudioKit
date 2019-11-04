@@ -65,11 +65,11 @@ open class AKMIDINode: AKNode, AKMIDIListener {
         let velocity = MIDIVelocity(data3)
 
         if status == AKMIDIStatus.noteOn.rawValue && velocity > 0 {
-            internalNode.play(noteNumber: noteNumber, velocity: velocity)
+            internalNode.play(harmonicNoteNumber: noteNumber, velocity: velocity)
         } else if status == AKMIDIStatus.noteOn.rawValue && velocity == 0 {
-            internalNode.stop(noteNumber: noteNumber)
+            internalNode.stop(harmonicNoteNumber: noteNumber)
         } else if status == AKMIDIStatus.noteOff.rawValue {
-            internalNode.stop(noteNumber: noteNumber)
+            internalNode.stop(harmonicNoteNumber: noteNumber)
         }
     }
 
@@ -84,9 +84,9 @@ open class AKMIDINode: AKNode, AKMIDIListener {
                                  velocity: MIDIVelocity,
                                  channel: MIDIChannel) {
         if velocity > 0 {
-            internalNode.play(noteNumber: noteNumber, velocity: velocity)
+            internalNode.play(harmonicNoteNumber: noteNumber, velocity: velocity)
         } else {
-            internalNode.stop(noteNumber: noteNumber)
+            internalNode.stop(harmonicNoteNumber: noteNumber)
         }
     }
 }

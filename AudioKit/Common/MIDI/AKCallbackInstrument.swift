@@ -44,10 +44,10 @@ open class AKCallbackInstrument: AKMIDIInstrument {
     ///   - velocity:   MIDI Velocity (0-127)
     ///   - channel:    MIDI Channel
     ///
-    override open func start(noteNumber: HarmonicNoteNumber,
+    override open func start(harmonicNoteNumber: HarmonicNoteNumber,
                              velocity: MIDIVelocity,
                              channel: MIDIChannel) {
-        triggerCallbacks(.noteOn, noteNumber: noteNumber, velocity: velocity)
+        triggerCallbacks(.noteOn, noteNumber: harmonicNoteNumber, velocity: velocity)
     }
 
     /// Will trigger in response to any noteOff Message
@@ -56,7 +56,7 @@ open class AKCallbackInstrument: AKMIDIInstrument {
     ///   - noteNumber: MIDI Note Number being stopped
     ///   - channel:    MIDI Channel
     ///
-    override open func stop(noteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
-        triggerCallbacks(.noteOff, noteNumber: noteNumber, velocity: 0)
+    override open func stop(harmonicNoteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
+        triggerCallbacks(.noteOff, noteNumber: harmonicNoteNumber, velocity: 0)
     }
 }

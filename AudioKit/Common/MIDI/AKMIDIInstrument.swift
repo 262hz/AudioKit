@@ -65,9 +65,9 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
                                  velocity: MIDIVelocity,
                                  channel: MIDIChannel) {
         if velocity > 0 {
-            start(noteNumber: noteNumber, velocity: velocity, channel: channel)
+            start(harmonicNoteNumber: noteNumber, velocity: velocity, channel: channel)
         } else {
-            stop(noteNumber: noteNumber, channel: channel)
+            stop(harmonicNoteNumber: noteNumber, channel: channel)
         }
     }
 
@@ -79,7 +79,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - channel:    MIDI channel
     ///
     open func receivedMIDINoteOff(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity, channel: MIDIChannel) {
-        stop(noteNumber: noteNumber, channel: channel)
+        stop(harmonicNoteNumber: noteNumber, channel: channel)
     }
 
     // MARK: - MIDI Note Start/Stop
@@ -91,10 +91,10 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - velocity:   Velocity at which to play the note (0 - 127)
     ///   - channel:    Channel on which to play the note
     ///
-    @objc open func start(noteNumber: HarmonicNoteNumber,
+    @objc open func start(harmonicNoteNumber: HarmonicNoteNumber,
                           velocity: MIDIVelocity,
                           channel: MIDIChannel) {
-        play(noteNumber: noteNumber, velocity: velocity)
+        play(harmonicNoteNumber: harmonicNoteNumber, velocity: velocity)
     }
 
     /// Stop a note
@@ -103,7 +103,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - noteNumber: Note number to stop
     ///   - channel:    Channel on which to stop the note
     ///
-    @objc open func stop(noteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
+    @objc open func stop(harmonicNoteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
         // OVerride in subclass
     }
 
@@ -114,11 +114,11 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
         let status = data1 >> 4
         let channel = data1 & 0xF
         if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 > 0 {
-            start(noteNumber: HarmonicNoteNumber(data2),
+            start(harmonicNoteNumber: HarmonicNoteNumber(data2),
                   velocity: MIDIVelocity(data3),
                   channel: MIDIChannel(channel))
         } else if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 == 0 {
-            stop(noteNumber: HarmonicNoteNumber(data2), channel: MIDIChannel(channel))
+            stop(harmonicNoteNumber: HarmonicNoteNumber(data2), channel: MIDIChannel(channel))
         }
     }
 }

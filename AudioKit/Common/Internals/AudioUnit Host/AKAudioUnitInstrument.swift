@@ -45,15 +45,18 @@ open class AKAudioUnitInstrument: AKMIDIInstrument {
     ///   - noteNumber: MIDI note number to stop
     ///   - channel: MIDI channel to stop the note on
     ///
-    open override func stop(noteNumber: HarmonicNoteNumber) {
-        self.stop(noteNumber: noteNumber, channel: 0)
+    
+    //TODO: regular midi functions?
+    
+    open override func stop(harmonicNoteNumber: HarmonicNoteNumber) {
+        self.stop(harmonicNoteNumber: harmonicNoteNumber, channel: 0)
     }
-    open override func stop(noteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
+    open override func stop(harmonicNoteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
         guard let midiInstrument = midiInstrument else {
             AKLog("no midiInstrument exists")
             return
         }
-        midiInstrument.stopNote(MIDINoteNumber(noteNumber), onChannel: channel)
+        midiInstrument.stopNote(MIDINoteNumber(harmonicNoteNumber), onChannel: channel)
     }
 
 }
