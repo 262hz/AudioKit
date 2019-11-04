@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by John Groenhof, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 /// Object to handle notifications for events that can affect the audio
@@ -27,4 +27,10 @@ extension Notification.Name {
     public static let AKEngineRestartedAfterConfigurationChange =
         Notification.Name(rawValue: "io.audiokit.enginerestartedafterconfigurationchange")
 
+    /// After the audio session is changed, (example: setting session from .playback to .playAndRecord); we need to restart AudioKit but using Audiokit.start() and adding some other players, connections can cause some crash because Audio Engine is not fully ready yet.
+    ///
+    /// This notification is giving the right time when AudioKit Engine is ready.
+    ///
+    public static let AKEngineStarted =
+        Notification.Name(rawValue: "io.audiokit.engineStarted")
 }

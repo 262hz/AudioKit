@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Aurelius Prochazka, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 import AVFoundation
@@ -34,6 +34,7 @@ open class AKMIDINode: AKNode, AKMIDIListener {
         internalNode = node
         super.init()
         avAudioNode = internalNode.avAudioNode
+        avAudioUnit = internalNode.avAudioUnit
       enableMIDI(name: midiOutputName ?? "Unnamed")
     }
 
@@ -48,9 +49,12 @@ open class AKMIDINode: AKNode, AKMIDIListener {
         CheckError(MIDIDestinationCreateWithBlock(midiClient, name as CFString, &midiIn) { packetList, _ in
             for e in packetList.pointee {
                 let event = AKMIDIEvent(packet: e)
-                self.handleMIDI(data1: MIDIByte(event.internalData[0]),
-                                data2: MIDIByte(event.internalData[1]),
-                                data3: MIDIByte(event.internalData[2]))
+                guard event.data.count > 2 else {
+                    return
+                }
+                self.handleMIDI(data1: event.data[0],
+                                data2: event.data[1],
+                                data3: event.data[2])
 
             }
         })
@@ -60,15 +64,16 @@ open class AKMIDINode: AKNode, AKMIDIListener {
 
     // Send MIDI data to the audio unit
     func handleMIDI(data1: MIDIByte, data2: MIDIByte, data3: MIDIByte) {
-        let status = Int(data1 >> 4)
+        let status = AKMIDIStatus(byte: data1)
+        let channel = status?.channel
         let noteNumber = HarmonicNoteNumber(data2)
         let velocity = MIDIVelocity(data3)
 
-        if status == AKMIDIStatus.noteOn.rawValue && velocity > 0 {
-            internalNode.play(harmonicNoteNumber: noteNumber, velocity: velocity)
-        } else if status == AKMIDIStatus.noteOn.rawValue && velocity == 0 {
+        if status?.type == .noteOn && velocity > 0 {
+            internalNode.play(harmonicNoteNumber: noteNumber, velocity: velocity, channel: channel ?? 0)
+        } else if status?.type == .noteOn && velocity == 0 {
             internalNode.stop(harmonicNoteNumber: noteNumber)
-        } else if status == AKMIDIStatus.noteOff.rawValue {
+        } else if status?.type == .noteOff {
             internalNode.stop(harmonicNoteNumber: noteNumber)
         }
     }
@@ -82,9 +87,10 @@ open class AKMIDINode: AKNode, AKMIDIListener {
     ///
     open func receivedMIDINoteOn(_ noteNumber: HarmonicNoteNumber,
                                  velocity: MIDIVelocity,
-                                 channel: MIDIChannel) {
+                                 channel: MIDIChannel,
+                                 offset: MIDITimeStamp = 0) {
         if velocity > 0 {
-            internalNode.play(harmonicNoteNumber: noteNumber, velocity: velocity)
+            internalNode.play(harmonicNoteNumber: noteNumber, velocity: velocity, channel: channel)
         } else {
             internalNode.stop(harmonicNoteNumber: noteNumber)
         }

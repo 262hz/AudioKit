@@ -2,11 +2,12 @@
 //  AKPropertyControl.swift
 //  AudioKit For macOS
 //
-//  Created by Aurelius Prochazka on 9/1/17.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Created by Aurelius Prochazka, revision history on Githbub.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 import Cocoa
+import AudioKit
 
 @IBDesignable open class AKPropertyControl: NSView {
     override open func acceptsFirstMouse(for theEvent: NSEvent?) -> Bool {
@@ -32,7 +33,7 @@ import Cocoa
     @IBInspectable public var value: Double = 0 {
         didSet {
             value = range.clamp(value)
-            if discreteValues.count > 0 {
+            if discreteValues.isNotEmpty {
                 value = closest(to: value)
             }
 
@@ -67,7 +68,7 @@ import Cocoa
     public var callback: ((Double) -> Void) = { _ in }
 
     // Only integer
-    @IBInspectable public var discreteValues: [Double]  = []
+    public var discreteValues: [Double]  = []
 
     // Current dragging state, used to show/hide the value bubble
     public var isDragging: Bool = false
@@ -79,7 +80,7 @@ import Cocoa
                 range: ClosedRange<Double> = 0 ... 1,
                 taper: Double = 1,
                 format: String = "%0.3f",
-                frame: CGRect = CGRect(x: 0, y: 0, width: 440, height: 60),
+                frame: CGRect = CGRect(width: 440, height: 60),
                 callback: @escaping (_ x: Double) -> Void = { _ in }) {
         self.value = value
         self.initialValue = value

@@ -2,9 +2,10 @@
 //  AKSlider.swift
 //  AudioKit for macOS
 //
-//  Created by Aurelius Prochazka on 7/26/16.
+//  Created by Aurelius Prochazka, revision history on Githbub.
 //  Copyright © 2017 Aurelius Prochazka. All rights reserved.
 //
+import AudioKit
 
 public enum AKSliderStyle {
     case roundIndicator
@@ -13,8 +14,10 @@ public enum AKSliderStyle {
     // Factor for calculating the corner radius of the slider based on the width of the slider indicator
     var cornerRadiusFactor: CGFloat {
         switch self {
-        case .roundIndicator: return 2.0
-        case .tabIndicator: return 4.0
+        case .roundIndicator:
+            return 2.0
+        case .tabIndicator:
+            return 4.0
         }
     }
 }
@@ -72,7 +75,7 @@ public enum AKSliderStyle {
                 taper: Double = 1,
                 format: String = "%0.3f",
                 color: AKColor = AKStylist.sharedInstance.nextColor,
-                frame: CGRect = CGRect(x: 0, y: 0, width: 440, height: 60),
+                frame: CGRect = CGRect(width: 440, height: 60),
                 callback: @escaping (_ x: Double) -> Void = { _ in }) {
 
         self.color = color
@@ -106,44 +109,62 @@ public enum AKSliderStyle {
 
     private var indicatorWidth: CGFloat {
         switch sliderStyle {
-        case .roundIndicator: return sliderHeight
-        case .tabIndicator: return AKSlider.tabIndicatorWidth
+        case .roundIndicator:
+            return sliderHeight
+        case .tabIndicator:
+            return AKSlider.tabIndicatorWidth
         }
     }
 
     var bgColorForTheme: AKColor {
-        if let bgColor = bgColor { return bgColor }
+        if let bgColor = bgColor {
+            return bgColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.3, alpha: 1.0)
-        case .midnight: return AKColor(white: 0.7, alpha: 1.0)
+        case .basic:
+            return AKColor(white: 0.3, alpha: 1.0)
+        case .midnight:
+            return AKColor(white: 0.7, alpha: 1.0)
         }
     }
 
     var indicatorBorderColorForTheme: AKColor {
-        if let indicatorBorderColor = indicatorBorderColor { return indicatorBorderColor }
+        if let indicatorBorderColor = indicatorBorderColor {
+            return indicatorBorderColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.3, alpha: 1.0)
-        case .midnight: return AKColor.white
+        case .basic:
+            return AKColor(white: 0.3, alpha: 1.0)
+        case .midnight:
+            return AKColor.white
         }
     }
 
     var sliderBorderColorForTheme: AKColor {
-        if let sliderBorderColor = sliderBorderColor { return sliderBorderColor }
+        if let sliderBorderColor = sliderBorderColor {
+            return sliderBorderColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.2, alpha: 1.0)
-        case .midnight: return AKColor(white: 0.9, alpha: 1.0)
+        case .basic:
+            return AKColor(white: 0.2, alpha: 1.0)
+        case .midnight:
+            return AKColor(white: 0.9, alpha: 1.0)
         }
     }
 
     var textColorForTheme: AKColor {
-        if let textColor = textColor { return textColor }
+        if let textColor = textColor {
+            return textColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.3, alpha: 1.0)
-        case .midnight: return AKColor.white
+        case .basic:
+            return AKColor(white: 0.3, alpha: 1.0)
+        case .midnight:
+            return AKColor.white
         }
     }
 
@@ -169,16 +190,16 @@ public enum AKSliderStyle {
         // Calculate name label height
         let themeTextColor = textColorForTheme
 
-        let nameLabelRect = CGRect(x: 0, y: 0, width: width, height: height)
+        let nameLabelRect = CGRect(width: width, height: height)
         let nameLabelStyle = NSMutableParagraphStyle()
         nameLabelStyle.alignment = .left
 
-        let nameLabelFontAttributes = [NSAttributedStringKey.font: NSFont.boldSystemFont(ofSize: fontSize),
-                                       NSAttributedStringKey.foregroundColor: themeTextColor,
-                                       NSAttributedStringKey.paragraphStyle: nameLabelStyle]
+        let nameLabelFontAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.boldSystemFont(ofSize: fontSize),
+                                       .foregroundColor: themeTextColor,
+                                       .paragraphStyle: nameLabelStyle]
 
         let nameLabelTextHeight: CGFloat = NSString(string: propertyName).boundingRect(
-            with: CGSize(width: width, height: CGFloat.infinity),
+            with: CGSize(width: width, height: .infinity),
             options: .usesLineFragmentOrigin,
             attributes: nameLabelFontAttributes).size.height
         context.saveGState()
@@ -253,17 +274,18 @@ public enum AKSliderStyle {
 
         //// valueLabel Drawing
         if showsValueBubble && isDragging {
-            let valueLabelRect = NSRect(x: 0, y: 0, width: width, height: height)
+            let valueLabelRect = NSRect(width: width, height: height)
             let valueLabelStyle = NSMutableParagraphStyle()
             valueLabelStyle.alignment = .center
 
-            let valueLabelFontAttributes = [NSAttributedStringKey.font: NSFont.boldSystemFont(ofSize: bubbleFontSize),
-                                            NSAttributedStringKey.foregroundColor: themeTextColor,
-                                            NSAttributedStringKey.paragraphStyle: valueLabelStyle]
+            let valueLabelFontAttributes: [NSAttributedString.Key: Any] =
+                [.font: NSFont.boldSystemFont(ofSize: bubbleFontSize),
+                 .foregroundColor: themeTextColor,
+                 .paragraphStyle: valueLabelStyle]
 
             let valueLabelInset: NSRect = valueLabelRect.insetBy(dx: 0, dy: 0)
             let valueLabelTextSize = NSString(string: currentValueText).boundingRect(
-                with: CGSize(width: valueLabelInset.width, height: CGFloat.infinity),
+                with: CGSize(width: valueLabelInset.width, height: .infinity),
                 options: .usesLineFragmentOrigin,
                 attributes: valueLabelFontAttributes).size
 
@@ -299,13 +321,14 @@ public enum AKSliderStyle {
             context.restoreGState()
 
         } else if showsValueBubble == false {
-            let valueLabelRect = CGRect(x: 0, y: 0, width: width, height: height)
+            let valueLabelRect = CGRect(width: width, height: height)
             let valueLabelStyle = NSMutableParagraphStyle()
             valueLabelStyle.alignment = .right
 
-            let valueLabelFontAttributes = [NSAttributedStringKey.font: NSFont.boldSystemFont(ofSize: fontSize),
-                                            NSAttributedStringKey.foregroundColor: themeTextColor,
-                                            NSAttributedStringKey.paragraphStyle: valueLabelStyle]
+            let valueLabelFontAttributes: [NSAttributedString.Key: Any] =
+                [.font: NSFont.boldSystemFont(ofSize: fontSize),
+                 .foregroundColor: themeTextColor,
+                 .paragraphStyle: valueLabelStyle]
 
             let valueLabelInset: CGRect = valueLabelRect.insetBy(dx: sliderCornerRadius, dy: sliderOrigin * 2.0)
             let valueLabelTextHeight: CGFloat = NSString(string: currentValueText).boundingRect(

@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Mike Gazzaruso, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #pragma once
@@ -15,6 +15,5 @@
 @property (nonatomic) float lowGain;
 @property (nonatomic) float midGain;
 @property (nonatomic) float highGain;
-@property (nonatomic) float distType;
 @property (nonatomic) float distortion;
 @end

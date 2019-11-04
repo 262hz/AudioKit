@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Mike Gazzaruso, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 /// DynaRage Tube Compressor | Based on DynaRage Tube Compressor RE for Reason
@@ -17,35 +17,31 @@ open class AKDynaRageCompressor: AKNode, AKToggleable, AKComponent, AKInput {
 
     // MARK: - Properties
     private var internalAU: AKAudioUnitType?
-    private var token: AUParameterObserverToken?
 
     // Compressor Processor
     fileprivate var ratioParameter: AUParameter?
     fileprivate var thresholdParameter: AUParameter?
-    fileprivate var attackTimeParameter: AUParameter?
-    fileprivate var releaseTimeParameter: AUParameter?
+    fileprivate var attackDurationParameter: AUParameter?
+    fileprivate var releaseDurationParameter: AUParameter?
 
     // Rage Processor
     fileprivate var rageParameter: AUParameter?
 
-    /// Ramp Time represents the speed at which parameters are allowed to change
-    @objc open dynamic var rampTime: Double = AKSettings.rampTime {
+    /// Ramp Duration represents the speed at which parameters are allowed to change
+    @objc open dynamic var rampDuration: Double = AKSettings.rampDuration {
         willSet {
-            internalAU?.rampTime = rampTime
+            internalAU?.rampDuration = rampDuration
         }
     }
 
     /// Ratio to compress with, a value > 1 will compress
     @objc open dynamic var ratio: Double = 1 {
         willSet {
-            if ratio != newValue {
-                if internalAU?.isSetUp ?? false {
-                    if let existingToken = token {
-                        ratioParameter?.setValue(Float(newValue), originator: existingToken)
-                    }
-                } else {
-                    internalAU?.ratio = Float(newValue)
-                }
+            guard ratio != newValue else { return }
+            if internalAU?.isSetUp == true {
+                ratioParameter?.value = AUValue(newValue)
+            } else {
+                internalAU?.ratio = AUValue(newValue)
             }
         }
     }
@@ -53,44 +49,35 @@ open class AKDynaRageCompressor: AKNode, AKToggleable, AKComponent, AKInput {
     /// Threshold (in dB) 0 = max
     @objc open dynamic var threshold: Double = 0.0 {
         willSet {
-            if threshold != newValue {
-                if internalAU?.isSetUp ?? false {
-                    if let existingToken = token {
-                        thresholdParameter?.setValue(Float(newValue), originator: existingToken)
-                    }
-                } else {
-                    internalAU?.threshold = Float(newValue)
-                }
+            guard threshold != newValue else { return }
+            if internalAU?.isSetUp == true {
+                thresholdParameter?.value = AUValue(newValue)
+            } else {
+                internalAU?.threshold = AUValue(newValue)
             }
         }
     }
 
-    /// Attack time
-    @objc open dynamic var attackTime: Double = 0.1 {
+    /// Attack dration
+    @objc open dynamic var attackDuration: Double = 0.1 {
         willSet {
-            if attackTime != newValue {
-                if internalAU?.isSetUp ?? false {
-                    if let existingToken = token {
-                        attackTimeParameter?.setValue(Float(newValue), originator: existingToken)
-                    }
-                } else {
-                    internalAU?.attackTime = Float(newValue)
-                }
+            guard attackDuration != newValue else { return }
+            if internalAU?.isSetUp == true {
+                attackDurationParameter?.value = AUValue(newValue)
+            } else {
+                internalAU?.attackDuration = AUValue(newValue)
             }
         }
     }
 
-    /// Release time
-    @objc open dynamic var releaseTime: Double = 0.1 {
+    /// Release duration
+    @objc open dynamic var releaseDuration: Double = 0.1 {
         willSet {
-            if releaseTime != newValue {
-                if internalAU?.isSetUp ?? false {
-                    if let existingToken = token {
-                        releaseTimeParameter?.setValue(Float(newValue), originator: existingToken)
-                    }
-                } else {
-                    internalAU?.releaseTime = Float(newValue)
-                }
+            guard releaseDuration != newValue else { return }
+            if internalAU?.isSetUp == true {
+                releaseDurationParameter?.value = AUValue(newValue)
+            } else {
+                internalAU?.releaseDuration = AUValue(newValue)
             }
         }
     }
@@ -98,14 +85,11 @@ open class AKDynaRageCompressor: AKNode, AKToggleable, AKComponent, AKInput {
     /// Rage Amount
     @objc open dynamic var rage: Double = 0.1 {
         willSet {
-            if rage != newValue {
-                if internalAU?.isSetUp ?? false {
-                    if let existingToken = token {
-                        rageParameter?.setValue(Float(newValue), originator: existingToken)
-                    }
-                } else {
-                    internalAU?.rage = Float(newValue)
-                }
+            guard rage != newValue else { return }
+            if internalAU?.isSetUp == true {
+                rageParameter?.value = AUValue(newValue)
+            } else {
+                internalAU?.rage = AUValue(newValue)
             }
         }
     }
@@ -130,22 +114,22 @@ open class AKDynaRageCompressor: AKNode, AKToggleable, AKComponent, AKInput {
     ///   - input: Input node to process
     ///   - ratio: Ratio to compress with, a value > 1 will compress
     ///   - threshold: Threshold (in dB) 0 = max
-    ///   - attackTime: Attack time
-    ///   - releaseTime: Release time
+    ///   - attackDuration: Attack duration in seconds
+    ///   - releaseDuration: Release duration in seconds
     ///
     @objc public init(
         _ input: AKNode? = nil,
         ratio: Double = 1,
         threshold: Double = 0.0,
-        attackTime: Double = 0.1,
-        releaseTime: Double = 0.1,
+        attackDuration: Double = 0.1,
+        releaseDuration: Double = 0.1,
         rage: Double = 0.1,
         rageIsOn: Bool = true) {
 
         self.ratio = ratio
         self.threshold = threshold
-        self.attackTime = attackTime
-        self.releaseTime = releaseTime
+        self.attackDuration = attackDuration
+        self.releaseDuration = releaseDuration
         self.rage = rage
         self.rageIsOn = rageIsOn
 
@@ -157,6 +141,7 @@ open class AKDynaRageCompressor: AKNode, AKToggleable, AKComponent, AKInput {
                 AKLog("Error: self is nil")
                 return
             }
+            strongSelf.avAudioUnit = avAudioUnit
             strongSelf.avAudioNode = avAudioUnit
             strongSelf.internalAU = avAudioUnit.auAudioUnit as? AKAudioUnitType
             input?.connect(to: strongSelf)
@@ -169,34 +154,16 @@ open class AKDynaRageCompressor: AKNode, AKToggleable, AKComponent, AKInput {
 
         ratioParameter = tree["ratio"]
         thresholdParameter = tree["threshold"]
-        attackTimeParameter = tree["attackTime"]
-        releaseTimeParameter = tree["releaseTime"]
+        attackDurationParameter = tree["attackDuration"]
+        releaseDurationParameter = tree["releaseDuration"]
         rageParameter = tree["rage"]
-
-        token = tree.token(byAddingParameterObserver: { [weak self] address, value in
-
-            DispatchQueue.main.async {
-                if address == self?.ratioParameter?.address {
-                    self?.ratio = Double(value)
-                } else if address == self?.thresholdParameter?.address {
-                    self?.threshold = Double(value)
-                } else if address == self?.attackTimeParameter?.address {
-                    self?.attackTime = Double(value)
-                } else if address == self?.releaseTimeParameter?.address {
-                    self?.releaseTime = Double(value)
-                } else if address == self?.rageParameter?.address {
-                    self?.rage = Double(value)
-                }
-            }
-        })
 
         internalAU?.ratio = Float(ratio)
         internalAU?.threshold = Float(threshold)
-        internalAU?.attackTime = Float(attackTime)
-        internalAU?.releaseTime = Float(releaseTime)
+        internalAU?.attackDuration = Float(attackDuration)
+        internalAU?.releaseDuration = Float(releaseDuration)
         internalAU?.rage = Float(rage)
         internalAU?.rageIsOn = Bool(rageIsOn)
-
     }
 
     // MARK: - Control

@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Ryan Francesconi, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 /**
@@ -29,10 +29,22 @@ open class AKConverter: NSObject {
     public typealias AKConverterCallback = (_ error: Error?) -> Void
 
     /** Formats that this class can write */
-    open static let outputFormats = ["wav", "aif", "caf", "m4a"]
+    public static let outputFormats = ["wav", "aif", "caf", "m4a"]
 
     /** Formats that this class can read */
-    open static let inputFormats = AKConverter.outputFormats + ["mp3", "mp4", "snd", "au", "sd2", "aiff", "aifc", "aac"]
+    public static let inputFormats = AKConverter.outputFormats + [
+        "mp3",
+        "snd",
+        "au",
+        "sd2",
+        "aiff",
+        "aifc",
+        "aac",
+        "mp4",
+        "m4v",
+        "mov",
+        "" // allow files with no extension. convertToPCM can still read the type
+    ]
 
     /**
      The conversion options, leave nil to adopt the value of the input file
@@ -102,7 +114,7 @@ open class AKConverter: NSObject {
             convertCompressed(completionHandler: completionHandler)
             return
 
-        } else if !isCompressed(url: outputURL) {
+        } else if isCompressed(url: outputURL) == false {
             convertToPCM(completionHandler: completionHandler)
             return
         }
@@ -228,11 +240,9 @@ open class AKConverter: NSObject {
 
         // Note: AVAssetReaderOutput does not currently support compressed output
         if formatKey == kAudioFormatMPEG4AAC {
-
             if sampleRate > 48_000 {
-                sampleRate = 44_100
+                sampleRate = 48_000
             }
-
             outputSettings = [
                 AVFormatIDKey: formatKey,
                 AVSampleRateKey: sampleRate,
@@ -254,21 +264,21 @@ open class AKConverter: NSObject {
         let readerOutput = AVAssetReaderTrackOutput(track: tracks[0], outputSettings: nil)
         reader.add(readerOutput)
 
-        if !writer.startWriting() {
+        if writer.startWriting() == false {
             let error = String(describing: writer.error)
             AKLog("Failed to start writing. Error: \(error)")
             completionHandler?(writer.error)
             return
         }
 
-        writer.startSession(atSourceTime: kCMTimeZero)
+        writer.startSession(atSourceTime: CMTime.zero)
         reader.startReading()
 
         let queue = DispatchQueue(label: "io.audiokit.AKConverter.start", qos: .utility)
 
+        // session.progress could be sent out via a delegate for this session
         writerInput.requestMediaDataWhenReady(on: queue, using: {
             while writerInput.isReadyForMoreMediaData {
-
                 if reader.status == .failed {
                     AKLog("Conversion Failed")
                     break
@@ -305,6 +315,8 @@ open class AKConverter: NSObject {
 
         let asset = AVURLAsset(url: inputURL)
         guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else { return }
+
+        // session.progress could be sent out via a delegate for this session
         session.outputURL = outputURL
         session.outputFileType = .m4a
         session.exportAsynchronously {
@@ -312,10 +324,9 @@ open class AKConverter: NSObject {
         }
     }
 
-    // Currently as of 2017, if you want to convert from a compressed
+    // Currently, as of 2017, if you want to convert from a compressed
     // format to a pcm one, you still have to hit CoreAudio
     private func convertToPCM(completionHandler: AKConverterCallback? = nil) {
-
         guard let inputURL = self.inputURL else {
             completionHandler?(createError(message: "Input file can't be nil."))
             return
@@ -330,6 +341,7 @@ open class AKConverter: NSObject {
             return
         }
 
+        let inputFormat = inputURL.pathExtension.lowercased()
         let outputFormat = options?.format ?? outputURL.pathExtension.lowercased()
 
         AKLog("convertToPCM() to \(outputURL)")
@@ -356,7 +368,12 @@ open class AKConverter: NSObject {
         var srcFormat = AudioStreamBasicDescription()
         var dstFormat = AudioStreamBasicDescription()
 
-        ExtAudioFileOpenURL(inputURL as CFURL, &sourceFile)
+        error = ExtAudioFileOpenURL(inputURL as CFURL, &sourceFile)
+        if error != noErr {
+            completionHandler?(createError(message: "Unable to open the input file."))
+            return
+        }
+
         var thePropertySize = UInt32(MemoryLayout.stride(ofValue: srcFormat))
 
         guard let inputFile = sourceFile else {
@@ -375,6 +392,14 @@ open class AKConverter: NSObject {
         let outputSampleRate = options?.sampleRate ?? srcFormat.mSampleRate
         let outputChannels = options?.channels ?? srcFormat.mChannelsPerFrame
         var outputBitRate = options?.bitDepth ?? srcFormat.mBitsPerChannel
+
+        guard inputFormat != outputFormat ||
+            outputSampleRate != srcFormat.mSampleRate ||
+            outputChannels != srcFormat.mChannelsPerFrame ||
+            outputBitRate != srcFormat.mBitsPerChannel else {
+            completionHandler?(createError(message: "No conversion is needed, formats are the same."))
+            return
+        }
 
         var outputBytesPerFrame = outputBitRate * outputChannels / 8
         var outputBytesPerPacket = options?.bitDepth == nil ? srcFormat.mBytesPerPacket : outputBytesPerFrame
@@ -491,7 +516,7 @@ open class AKConverter: NSObject {
 
     private func isCompressed(url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
-        return (ext == "m4a" || ext == "mp3" || ext == "mp4")
+        return (ext == "m4a" || ext == "mp3" || ext == "mp4" || ext == "m4v" || ext == "mpg")
     }
 
     private func createError(message: String, code: Int = 1) -> NSError {

@@ -11,49 +11,42 @@ import AVFoundation
 public class AKBrownianNoiseAudioUnit: AKGeneratorAudioUnitBase {
 
     func setParameter(_ address: AKBrownianNoiseParameter, value: Double) {
-        setParameterWithAddress(AUParameterAddress(address.rawValue), value: Float(value))
+        setParameterWithAddress(address.rawValue, value: Float(value))
     }
 
     func setParameterImmediately(_ address: AKBrownianNoiseParameter, value: Double) {
-        setParameterImmediatelyWithAddress(AUParameterAddress(address.rawValue), value: Float(value))
+        setParameterImmediatelyWithAddress(address.rawValue, value: Float(value))
     }
 
     var amplitude: Double = AKBrownianNoise.defaultAmplitude {
         didSet { setParameter(.amplitude, value: amplitude) }
     }
 
-    var rampTime: Double = 0.0 {
-        didSet { setParameter(.rampTime, value: rampTime) }
+    var rampDuration: Double = 0.0 {
+        didSet { setParameter(.rampDuration, value: rampDuration) }
     }
 
     public override func initDSP(withSampleRate sampleRate: Double,
-                                 channelCount count: AVAudioChannelCount) -> UnsafeMutableRawPointer! {
+                                 channelCount count: AVAudioChannelCount) -> AKDSPRef {
         return createBrownianNoiseDSP(Int32(count), sampleRate)
     }
 
     public override init(componentDescription: AudioComponentDescription,
-                  options: AudioComponentInstantiationOptions = []) throws {
+                         options: AudioComponentInstantiationOptions = []) throws {
         try super.init(componentDescription: componentDescription, options: options)
 
-        let flags: AudioUnitParameterOptions = [.flag_IsReadable, .flag_IsWritable, .flag_CanRamp]
-
-        let amplitude = AUParameterTree.createParameter(
-            withIdentifier: "amplitude",
+        let amplitude = AUParameter(
+            identifier: "amplitude",
             name: "Amplitude",
-            address: AUParameterAddress(0),
-            min: Float(AKBrownianNoise.amplitudeRange.lowerBound),
-            max: Float(AKBrownianNoise.amplitudeRange.upperBound),
+            address: AKBrownianNoiseParameter.amplitude.rawValue,
+            range: AKBrownianNoise.amplitudeRange,
             unit: .generic,
-            unitName: nil,
-            flags: flags,
-            valueStrings: nil,
-            dependentParameters: nil
-        )
-        
-        setParameterTree(AUParameterTree.createTree(withChildren: [amplitude]))
+            flags: .default)
+
+        setParameterTree(AUParameterTree(children: [amplitude]))
         amplitude.value = Float(AKBrownianNoise.defaultAmplitude)
     }
 
-    public override var canProcessInPlace: Bool { get { return true; }}
+    public override var canProcessInPlace: Bool { return true }
 
 }

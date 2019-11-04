@@ -2,7 +2,7 @@
 //  Conductor.swift
 //  ExtendingAudioKit
 //
-//  Created by Shane Dunne on 2018-01-19.
+//  Created by Shane Dunne, revision history on Githbub.
 //  Copyright © 2018 AudioKit. All rights reserved.
 //
 
@@ -40,7 +40,7 @@ class Conductor {
 
         // MIDI Configure
         midi.createVirtualPorts()
-        midi.openInput("Session 1")
+        midi.openInput(name: "Session 1")
         midi.openOutput()
 
         // Session settings
@@ -83,12 +83,12 @@ class Conductor {
 
     func openMIDIInput(byName: String) {
         midi.closeAllInputs()
-        midi.openInput(byName)
+        midi.openInput(name: byName)
     }
 
     func openMIDIInput(byIndex: Int) {
         midi.closeAllInputs()
-        midi.openInput(midi.inputNames[byIndex])
+        midi.openInput(index: byIndex)
     }
 
     func getWaveformName() -> String {
@@ -100,7 +100,7 @@ class Conductor {
         guard i >= 0 && i <= 3 else { return }
         if (i != waveformIndex) {
             waveformIndex = i
-            print("Change waveform to \(getWaveformName())")
+            AKLog("Change waveform to \(getWaveformName())")
             oscillator.waveform = waveforms[i]
         }
     }
@@ -121,7 +121,7 @@ class Conductor {
         }
     }
 
-    func afterTouch(_ pressure: MIDIByte) {
+    func aftertouch(_ pressure: MIDIByte) {
     }
 
     func controller(_ controller: MIDIByte, value: MIDIByte) {

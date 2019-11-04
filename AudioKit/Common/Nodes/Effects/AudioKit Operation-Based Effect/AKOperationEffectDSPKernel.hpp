@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Aurelius Prochazka, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #pragma once
@@ -27,8 +27,8 @@ public:
 
     AKOperationEffectDSPKernel() {}
 
-    void init(int _channels, double _sampleRate) override {
-        AKSoundpipeKernel::init(_channels, _sampleRate);
+    void init(int channelCount, double sampleRate) override {
+        AKSoundpipeKernel::init(channelCount, sampleRate);
         plumber_register(&pd);
         plumber_init(&pd);
 
@@ -55,9 +55,9 @@ public:
         }
     }
 
-    void setParameters(float params[]) {
+    void setParameters(float temporaryParameters[]) {
         for (int i = 0; i < 14; i++) {
-            parameters[i] = params[i];
+            parameters[i] = temporaryParameters[i];
         }
     };
 
@@ -76,9 +76,6 @@ public:
     void destroy() {
         plumber_clean(&pd);
         AKSoundpipeKernel::destroy();
-        if (sporthCode) {
-            free(sporthCode);
-        }
     }
 
     void reset() {
@@ -144,7 +141,7 @@ private:
     char *sporthCode = nil;
     std::vector<AKCustomUgenInfo> customUgens;
 public:
-    float parameters[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    float parameters[14] = {0};
     bool started = true;
 };
 

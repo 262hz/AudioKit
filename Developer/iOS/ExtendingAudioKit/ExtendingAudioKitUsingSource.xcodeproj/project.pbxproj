@@ -19,7 +19,7 @@
 		C4E249FA2031946800A020D7 /* AudioKitUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4E249F72031945E00A020D7 /* AudioKitUI.framework */; };
 		C4E24A032031952200A020D7 /* SDBooster.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E249FF2031952200A020D7 /* SDBooster.swift */; };
 		C4E24A042031952200A020D7 /* SDBoosterAudioUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E24A002031952200A020D7 /* SDBoosterAudioUnit.swift */; };
-		C4E24A052031952200A020D7 /* SDBooster.mm in Sources */ = {isa = PBXBuildFile; fileRef = C4E24A022031952200A020D7 /* SDBooster.mm */; };
+		C4E7A017203C0F790061C33C /* SDBoosterDSP.mm in Sources */ = {isa = PBXBuildFile; fileRef = C4E7A016203C0F780061C33C /* SDBoosterDSP.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,7 +67,7 @@
 		C4E249FF2031952200A020D7 /* SDBooster.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDBooster.swift; sourceTree = "<group>"; };
 		C4E24A002031952200A020D7 /* SDBoosterAudioUnit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SDBoosterAudioUnit.swift; sourceTree = "<group>"; };
 		C4E24A012031952200A020D7 /* SDBoosterDSP.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SDBoosterDSP.hpp; sourceTree = "<group>"; };
-		C4E24A022031952200A020D7 /* SDBooster.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SDBooster.mm; sourceTree = "<group>"; };
+		C4E7A016203C0F780061C33C /* SDBoosterDSP.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SDBoosterDSP.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,7 +132,7 @@
 				C4E249FF2031952200A020D7 /* SDBooster.swift */,
 				C4E24A002031952200A020D7 /* SDBoosterAudioUnit.swift */,
 				C4E24A012031952200A020D7 /* SDBoosterDSP.hpp */,
-				C4E24A022031952200A020D7 /* SDBooster.mm */,
+				C4E7A016203C0F780061C33C /* SDBoosterDSP.mm */,
 			);
 			name = SDBooster;
 			path = ../../Common/SDBooster;
@@ -166,11 +166,12 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = AudioKit;
 				TargetAttributes = {
 					3429F97E201A25AB00300166 = {
 						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Manual;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -242,8 +243,8 @@
 			files = (
 				3429F985201A25AB00300166 /* ViewController.swift in Sources */,
 				C4A76694203199D700583F47 /* SDSustainer.swift in Sources */,
+				C4E7A017203C0F790061C33C /* SDBoosterDSP.mm in Sources */,
 				C4E24A032031952200A020D7 /* SDBooster.swift in Sources */,
-				C4E24A052031952200A020D7 /* SDBooster.mm in Sources */,
 				C4E24A042031952200A020D7 /* SDBoosterAudioUnit.swift in Sources */,
 				3429F983201A25AB00300166 /* AppDelegate.swift in Sources */,
 				C4A76695203199D700583F47 /* Conductor.swift in Sources */,
@@ -285,6 +286,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -292,6 +294,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -343,6 +346,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -350,6 +354,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -398,7 +403,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/../../Common/ExtendingAudioKit-Bridging-Header.h";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -420,7 +425,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/../../Common/ExtendingAudioKit-Bridging-Header.h";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

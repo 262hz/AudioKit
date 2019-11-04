@@ -15,7 +15,6 @@ open class AKToneComplementFilter: AKNode, AKToggleable, AKComponent, AKInput {
 
     // MARK: - Properties
     private var internalAU: AKAudioUnitType?
-    private var token: AUParameterObserverToken?
 
     fileprivate var halfPowerPointParameter: AUParameter?
 
@@ -25,25 +24,22 @@ open class AKToneComplementFilter: AKNode, AKToggleable, AKComponent, AKInput {
     /// Initial value for Half Power Point
     public static let defaultHalfPowerPoint = 1_000.0
 
-    /// Ramp Time represents the speed at which parameters are allowed to change
-    @objc open dynamic var rampTime: Double = AKSettings.rampTime {
+    /// Ramp Duration represents the speed at which parameters are allowed to change
+    @objc open dynamic var rampDuration: Double = AKSettings.rampDuration {
         willSet {
-            internalAU?.rampTime = newValue
+            internalAU?.rampDuration = newValue
         }
     }
 
     /// Half-Power Point in Hertz. Half power is defined as peak power / square root of 2.
     @objc open dynamic var halfPowerPoint: Double = defaultHalfPowerPoint {
         willSet {
-            if halfPowerPoint == newValue {
+            guard halfPowerPoint != newValue else { return }
+            if internalAU?.isSetUp == true {
+                halfPowerPointParameter?.value = AUValue(newValue)
                 return
             }
-            if internalAU?.isSetUp ?? false {
-                if let existingToken = token {
-                    halfPowerPointParameter?.setValue(Float(newValue), originator: existingToken)
-                    return
-                }
-            }
+
             internalAU?.setParameterImmediately(.halfPowerPoint, value: newValue)
         }
     }
@@ -76,6 +72,7 @@ open class AKToneComplementFilter: AKNode, AKToggleable, AKComponent, AKInput {
                 AKLog("Error: self is nil")
                 return
             }
+            strongSelf.avAudioUnit = avAudioUnit
             strongSelf.avAudioNode = avAudioUnit
             strongSelf.internalAU = avAudioUnit.auAudioUnit as? AKAudioUnitType
             input?.connect(to: strongSelf)
@@ -87,18 +84,6 @@ open class AKToneComplementFilter: AKNode, AKToggleable, AKComponent, AKInput {
         }
 
         halfPowerPointParameter = tree["halfPowerPoint"]
-
-        token = tree.token(byAddingParameterObserver: { [weak self] _, _ in
-
-            guard let _ = self else {
-                AKLog("Unable to create strong reference to self")
-                return
-            } // Replace _ with strongSelf if needed
-            DispatchQueue.main.async {
-                // This node does not change its own values so we won't add any
-                // value observing, but if you need to, this is where that goes.
-            }
-        })
 
         internalAU?.setParameterImmediately(.halfPowerPoint, value: halfPowerPoint)
     }

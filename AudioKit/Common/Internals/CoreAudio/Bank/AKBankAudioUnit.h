@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Aurelius Prochazka, revision history on GitHub.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #pragma once
@@ -11,6 +11,14 @@
 #import "AKAudioUnit.h"
 
 @interface AKBankAudioUnit : AKAudioUnit
+
+@property AUParameter *attackDurationAUParameter;
+@property AUParameter *decayDurationAUParameter;
+@property AUParameter *sustainLevelAUParameter;
+@property AUParameter *releaseDurationAUParameter;
+@property AUParameter *pitchBendAUParameter;
+@property AUParameter *vibratoDepthAUParameter;
+@property AUParameter *vibratoRateAUParameter;
 
 @property (nonatomic) float attackDuration;
 @property (nonatomic) float decayDuration;
@@ -24,19 +32,11 @@
 - (void)startNote:(uint16_t)note velocity:(uint8_t)velocity frequency:(float)frequency;
 - (void)stopNote:(uint16_t)note;
 
-@end
+- (NSArray *)standardParameters;
+- (void)setKernelPtr:(void *)ptr;
 
-#define numberOfBankEnumElements 7
-
-#define standardBankEnumElements() \
-    attackDurationAddress = 0, \
-    decayDurationAddress = 1, \
-    sustainLevelAddress = 2, \
-    releaseDurationAddress = 3, \
-    pitchBendAddress = 4, \
-    vibratoDepthAddress = 5, \
-    vibratoRateAddress = 6
-
+/* TODO-brian: do we need this below? */
+/*
 #define standardBankAUParameterList() \
     attackDurationAUParameter, \
     decayDurationAUParameter, \
@@ -154,3 +154,5 @@ _kernel.setParameter(__type::releaseDurationAddress, releaseDurationAUParameter.
 _kernel.setParameter(__type::pitchBendAddress,       pitchBendAUParameter.value); \
 _kernel.setParameter(__type::vibratoDepthAddress,    vibratoDepthAUParameter.value);\
 _kernel.setParameter(__type::vibratoRateAddress,     vibratoRateAUParameter.value);
+ */
+@end

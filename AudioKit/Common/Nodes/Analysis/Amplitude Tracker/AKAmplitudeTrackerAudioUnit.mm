@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Aurelius Prochazka, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #import "AKAmplitudeTrackerAudioUnit.h"
@@ -34,6 +34,10 @@
 
 - (void)setThreshold:(float)threshold {
     _kernel.setThreshold(threshold);
+}
+
+- (void)setMode:(int)mode {
+    _kernel.mode = mode;
 }
 //- (void)setSmoothness:(float)smoothness {
 //    _kernel.setSmoothness(smoothness);

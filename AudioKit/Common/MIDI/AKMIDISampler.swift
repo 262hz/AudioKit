@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Jeff Cooper, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 import AVFoundation
@@ -13,7 +13,7 @@ import CoreAudio
 ///
 /// Be sure to enableMIDI if you want to receive messages
 ///
-open class AKMIDISampler: AKSampler {
+open class AKMIDISampler: AKAppleSampler {
     // MARK: - Properties
 
     /// MIDI Input
@@ -29,6 +29,7 @@ open class AKMIDISampler: AKSampler {
     public init(midiOutputName: String? = nil) {
         super.init()
         enableMIDI(name: midiOutputName ?? name)
+        hideVirtualMIDIPort()
     }
 
     /// Enable MIDI input from a given MIDI client
@@ -43,38 +44,36 @@ open class AKMIDISampler: AKSampler {
         CheckError(MIDIDestinationCreateWithBlock(midiClient, name as CFString, &midiIn) { packetList, _ in
             for e in packetList.pointee {
                 let event = AKMIDIEvent(packet: e)
-                self.handle(event: event)
+                do {
+                    try self.handle(event: event)
+                } catch let exception {
+                    AKLog("Exception handling MIDI event: \(exception)")
+                }
             }
         })
     }
 
-    private func handle(event: AKMIDIEvent) {
-        self.handleMIDI(data1: event.internalData[0],
-                        data2: event.internalData[1],
-                        data3: event.internalData[2])
+    private func handle(event: AKMIDIEvent) throws {
+        try self.handleMIDI(data1: event.data[0],
+                            data2: event.data[1],
+                            data3: event.data[2])
     }
 
     // MARK: - Handling MIDI Data
 
     // Send MIDI data to the audio unit
-    func handleMIDI(data1: MIDIByte, data2: MIDIByte, data3: MIDIByte) {
-        let status = data1 >> 4
-        let channel = data1 & 0xF
-
-        if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 > 0 {
-
-            play(noteNumber: MIDINoteNumber(data2),
-                 velocity: MIDIVelocity(data3),
-                 channel: MIDIChannel(channel))
-
-        } else if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 == 0 {
-
-            stop(noteNumber: MIDINoteNumber(data2), channel: MIDIChannel(channel))
-
-        } else if Int(status) == AKMIDIStatus.controllerChange.rawValue {
-
-            midiCC(data2, value: data3, channel: channel)
-
+    func handleMIDI(data1: MIDIByte, data2: MIDIByte, data3: MIDIByte) throws {
+        if let status = AKMIDIStatus(byte: data1) {
+            let channel = status.channel
+            if status.type == .noteOn && data3 > 0 {
+                try play(noteNumber: data2,
+                         velocity: data3,
+                         channel: channel)
+            } else if status.type == .noteOn && data3 == 0 {
+                try stop(noteNumber: data2, channel: channel)
+            } else if status.type == .controllerChange {
+                midiCC(data2, value: data3, channel: channel)
+            }
         }
     }
 
@@ -87,11 +86,11 @@ open class AKMIDISampler: AKSampler {
     ///
     open func receivedMIDINoteOn(noteNumber: MIDINoteNumber,
                                  velocity: MIDIVelocity,
-                                 channel: MIDIChannel) {
+                                 channel: MIDIChannel) throws {
         if velocity > 0 {
-            play(noteNumber: noteNumber, velocity: velocity, channel: channel)
+            try play(noteNumber: noteNumber, velocity: velocity, channel: channel)
         } else {
-            stop(noteNumber: noteNumber, channel: channel)
+            try stop(noteNumber: noteNumber, channel: channel)
         }
     }
 
@@ -108,16 +107,29 @@ open class AKMIDISampler: AKSampler {
 
     // MARK: - MIDI Note Start/Stop
 
-    /// Start a note
+    /// Start a note or trigger a sample
+    ///
+    /// - Parameters:
+    ///   - noteNumber: MIDI note number
+    ///   - velocity: MIDI velocity
+    ///   - channel: MIDI channel
+    ///
+    /// NB: when using an audio file, noteNumber 60 will play back the file at normal
+    /// speed, 72 will play back at double speed (1 octave higher), 48 will play back at
+    /// half speed (1 octave lower) and so on
     open override func play(noteNumber: MIDINoteNumber,
                             velocity: MIDIVelocity,
-                            channel: MIDIChannel) {
-        samplerUnit.startNote(noteNumber, withVelocity: velocity, onChannel: channel)
+                            channel: MIDIChannel) throws {
+        try AKTry {
+            self.samplerUnit.startNote(noteNumber, withVelocity: velocity, onChannel: channel)
+        }
     }
 
     /// Stop a note
-    open override func stop(noteNumber: MIDINoteNumber, channel: MIDIChannel) {
-        samplerUnit.stopNote(noteNumber, onChannel: channel)
+    open override func stop(noteNumber: MIDINoteNumber, channel: MIDIChannel) throws {
+        try AKTry {
+            self.samplerUnit.stopNote(noteNumber, onChannel: channel)
+        }
     }
 
     /// Discard all virtual ports
@@ -128,4 +140,10 @@ open class AKMIDISampler: AKSampler {
         }
     }
 
+    func showVirtualMIDIPort() {
+        MIDIObjectSetIntegerProperty(midiIn, kMIDIPropertyPrivate, 0)
+    }
+    func hideVirtualMIDIPort() {
+        MIDIObjectSetIntegerProperty(midiIn, kMIDIPropertyPrivate, 1)
+    }
 }

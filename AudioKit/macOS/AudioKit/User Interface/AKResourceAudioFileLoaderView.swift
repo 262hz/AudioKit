@@ -2,18 +2,19 @@
 //  AKResourceAudioFileLoaderView.swift
 //  AudioKit for macOS
 //
-//  Created by Aurelius Prochazka on 7/30/16.
+//  Created by Aurelius Prochazka, revision history on Githbub.
 //  Copyright © 2017 Aurelius Prochazka. All rights reserved.
 //
 
 import Cocoa
+import AudioKit
 
 public class AKResourcesAudioFileLoaderView: NSView {
 
     // Default corner radius
     static var standardCornerRadius: CGFloat = 3.0
 
-    var player: AKPlayer?
+    var player: AKAudioPlayer?
     var stopOuterPath = NSBezierPath()
     var playOuterPath = NSBezierPath()
     var upOuterPath = NSBezierPath()
@@ -47,9 +48,9 @@ public class AKResourcesAudioFileLoaderView: NSView {
     }
 
     /// Initialize the resource loader
-    public convenience init(player: AKPlayer,
+    public convenience init(player: AKAudioPlayer,
                             filenames: [String],
-                            frame: CGRect = CGRect(x: 0, y: 0, width: 440, height: 60)) {
+                            frame: CGRect = CGRect(width: 440, height: 60)) {
         self.init(frame: frame)
         self.player = player
         self.titles = filenames
@@ -58,13 +59,15 @@ public class AKResourcesAudioFileLoaderView: NSView {
     /// Handle click
     override public func mouseDown(with theEvent: NSEvent) {
         var isFileChanged = false
-        guard let player = player else { return }
+        guard let player = player else {
+            return
+        }
         let wasPlaying = player.isPlaying
         player.stop()
 
         let touchLocation = convert(theEvent.locationInWindow, from: nil)
         if stopOuterPath.contains(touchLocation) {
-            //player?.stop()
+            player.stop()
             return
         }
         if playOuterPath.contains(touchLocation) {
@@ -90,7 +93,11 @@ public class AKResourcesAudioFileLoaderView: NSView {
                 AKLog("Unable to load file: \(filename)")
                 return
             }
-            player.load(audioFile: file)
+            do {
+                try player.replace(file: file)
+            } catch {
+                AKLog("Could not replace file")
+            }
             if wasPlaying { player.play(from: 0) }
         }
         needsDisplay = true
@@ -98,38 +105,50 @@ public class AKResourcesAudioFileLoaderView: NSView {
 
     // Default background color per theme
     var bgColorForTheme: AKColor {
-        if let bgColor = bgColor { return bgColor }
+        if let bgColor = bgColor {
+            return bgColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.8, alpha: 1.0)
-        case .midnight: return AKColor(white: 0.7, alpha: 1.0)
+        case .basic:
+            return AKColor(white: 0.8, alpha: 1.0)
+        case .midnight:
+            return AKColor(white: 0.7, alpha: 1.0)
         }
     }
 
     // Default border color per theme
     var borderColorForTheme: AKColor {
-        if let borderColor = borderColor { return borderColor }
+        if let borderColor = borderColor {
+            return borderColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.3, alpha: 1.0).withAlphaComponent(0.8)
-        case .midnight: return AKColor.white.withAlphaComponent(0.8)
+        case .basic:
+            return AKColor(white: 0.3, alpha: 1.0).withAlphaComponent(0.8)
+        case .midnight:
+            return AKColor.white.withAlphaComponent(0.8)
         }
     }
 
     // Default text color per theme
     var textColorForTheme: AKColor {
-        if let textColor = textColor { return textColor }
+        if let textColor = textColor {
+            return textColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.3, alpha: 1.0)
-        case .midnight: return AKColor.white
+        case .basic:
+            return AKColor(white: 0.3, alpha: 1.0)
+        case .midnight:
+            return AKColor.white
         }
     }
 
     func drawAudioFileLoader(sliderColor: NSColor = AKStylist.sharedInstance.colorForFalseValue,
                              fileName: String = "None") {
         //// General Declarations
-        let _ = unsafeBitCast(NSGraphicsContext.current?.graphicsPort, to: CGContext.self)
+        _ = unsafeBitCast(NSGraphicsContext.current?.graphicsPort, to: CGContext.self)
         let rect = bounds
 
         let cornerRadius: CGFloat = AKResourcesAudioFileLoaderView.standardCornerRadius
@@ -157,12 +176,13 @@ public class AKResourcesAudioFileLoaderView: NSView {
         stopOuterPath.fill()
 
         //// stopInner Drawing
-        let stopInnerPath = NSBezierPath(roundedRect: NSRect(x: (rect.width * 0.13 - rect.height * 0.5) / 2 + cornerRadius,
-                                                             y: rect.height * 0.25,
-                                                             width: rect.height * 0.5,
-                                                             height: rect.height * 0.5),
-                                         xRadius: cornerRadius,
-                                         yRadius: cornerRadius)
+        let stopInnerPath = NSBezierPath(
+            roundedRect: NSRect(x: (rect.width * 0.13 - rect.height * 0.5) / 2 + cornerRadius,
+                                y: rect.height * 0.25,
+                                width: rect.height * 0.5,
+                                height: rect.height * 0.5),
+            xRadius: cornerRadius,
+            yRadius: cornerRadius)
         dark.setFill()
         stopInnerPath.fill()
 
@@ -176,7 +196,9 @@ public class AKResourcesAudioFileLoaderView: NSView {
         playOuterPath.fill()
 
         //// playInner Drawing
-        let playRect = NSRect(x: (rect.width * 0.13 - rect.height * 0.5) / 2 + borderWidth + rect.width * 0.13 + borderWidth,
+        let playRectX = (rect.width * 0.13 - rect.height * 0.5) / 2 + borderWidth +
+            rect.width * 0.13 + borderWidth
+        let playRect = NSRect(x: playRectX,
                               y: rect.height * 0.25,
                               width: rect.height * 0.5,
                               height: rect.height * 0.5)
@@ -289,13 +311,13 @@ public class AKResourcesAudioFileLoaderView: NSView {
         let nameLabelStyle = NSMutableParagraphStyle()
         nameLabelStyle.alignment = .left
 
-        let nameLabelFontAttributes = [NSAttributedStringKey.font: NSFont.boldSystemFont(ofSize: 24.0),
-                                       NSAttributedStringKey.foregroundColor: textColorForTheme,
-                                       NSAttributedStringKey.paragraphStyle: nameLabelStyle]
+        let nameLabelFontAttributes: [NSAttributedString.Key: Any] = [.font: NSFont.boldSystemFont(ofSize: 24.0),
+                                       .foregroundColor: textColorForTheme,
+                                       .paragraphStyle: nameLabelStyle]
 
         let nameLabelInset: CGRect = nameLabelRect.insetBy(dx: 10, dy: 0)
         let nameLabelTextHeight: CGFloat = NSString(string: fileName).boundingRect(
-            with: NSSize(width: nameLabelInset.width, height: CGFloat.infinity),
+            with: NSSize(width: nameLabelInset.width, height: .infinity),
             options: .usesLineFragmentOrigin,
             attributes: nameLabelFontAttributes).size.height
         let nameLabelTextRect: NSRect = NSRect(

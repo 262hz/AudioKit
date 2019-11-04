@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Jeff Cooper, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 import AVFoundation
@@ -19,15 +19,19 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     open var midiIn = MIDIEndpointRef()
 
     /// Name of the instrument
-    open var name = "AKMIDIInstrument"
+    open var name = "AudioKit MIDI Instrument"
+
+    open var mpeActiveNotes: [(note: HarmonicNoteNumber, channel: MIDIChannel)] = []
 
     /// Initialize the MIDI Instrument
     ///
-    /// - Parameter midiOutputName: Name of the instrument's MIDI output
+    /// - Parameter midiInputName: Name of the instrument's MIDI input
     ///
-    public init(midiOutputName: String? = nil) {
+    public init(midiInputName: String? = nil) {
         super.init()
-        enableMIDI(name: midiOutputName ?? "Unnamed")
+        name = midiInputName ?? name
+        enableMIDI(name: midiInputName ?? name)
+        hideVirtualMIDIPort()
     }
 
     /// Enable MIDI input from a given MIDI client
@@ -37,7 +41,7 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - name: Name to connect with
     ///
     open func enableMIDI(_ midiClient: MIDIClientRef = AudioKit.midi.client,
-                         name: String = "Unnamed") {
+                         name: String = "AudioKit MIDI Instrument") {
         CheckError(MIDIDestinationCreateWithBlock(midiClient, name as CFString, &midiIn) { packetList, _ in
             for e in packetList.pointee {
                 let event = AKMIDIEvent(packet: e)
@@ -47,9 +51,12 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     }
 
     private func handle(event: AKMIDIEvent) {
-        self.handleMIDI(data1: MIDIByte(event.internalData[0]),
-                        data2: MIDIByte(event.internalData[1]),
-                        data3: MIDIByte(event.internalData[2]))
+        guard event.data.count > 2 else {
+            return
+        }
+        self.handleMIDI(data1: event.data[0],
+                        data2: event.data[1],
+                        data3: event.data[2])
     }
 
     // MARK: - Handling MIDI Data
@@ -63,7 +70,9 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///
     open func receivedMIDINoteOn(_ noteNumber: HarmonicNoteNumber,
                                  velocity: MIDIVelocity,
-                                 channel: MIDIChannel) {
+                                 channel: MIDIChannel,
+                                 offset: MIDITimeStamp = 0) {
+        mpeActiveNotes.append((noteNumber, channel))
         if velocity > 0 {
             start(harmonicNoteNumber: noteNumber, velocity: velocity, channel: channel)
         } else {
@@ -78,8 +87,69 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - velocity:   MIDI velocity
     ///   - channel:    MIDI channel
     ///
-    open func receivedMIDINoteOff(noteNumber: HarmonicNoteNumber, velocity: MIDIVelocity, channel: MIDIChannel) {
+    open func receivedMIDINoteOff(noteNumber: HarmonicNoteNumber,
+                                  velocity: MIDIVelocity,
+                                  channel: MIDIChannel,
+                                  portID: MIDIUniqueID? = nil,
+                                  offset: MIDITimeStamp = 0) {
         stop(harmonicNoteNumber: noteNumber, channel: channel)
+        mpeActiveNotes.removeAll(where: { $0 == (noteNumber, channel) })
+    }
+
+    /// Receive a generic controller value
+    ///
+    /// - Parameters:
+    ///   - controller: MIDI Controller Number
+    ///   - value:      Value of this controller
+    ///   - channel:    MIDI Channel (1-16)
+    ///
+    open func receivedMIDIController(_ controller: MIDIByte,
+                                     value: MIDIByte,
+                                     channel: MIDIChannel,
+                                     portID: MIDIUniqueID? = nil,
+                                     offset: MIDITimeStamp = 0) {
+        // Override in subclass
+    }
+
+    /// Receive single note based aftertouch event
+    ///
+    /// - Parameters:
+    ///   - noteNumber: Note number of touched note
+    ///   - pressure:   Pressure applied to the note (0-127)
+    ///   - channel:    MIDI Channel (1-16)
+    ///
+    open func receivedMIDIAftertouch(noteNumber: MIDINoteNumber,
+                                     pressure: MIDIByte,
+                                     channel: MIDIChannel,
+                                     portID: MIDIUniqueID? = nil,
+                                     offset: MIDITimeStamp = 0) {
+        // Override in subclass
+    }
+
+    /// Receive global aftertouch
+    ///
+    /// - Parameters:
+    ///   - pressure: Pressure applied (0-127)
+    ///   - channel:  MIDI Channel (1-16)
+    ///
+    open func receivedMIDIAftertouch(_ pressure: MIDIByte,
+                                     channel: MIDIChannel,
+                                     portID: MIDIUniqueID? = nil,
+                                     offset: MIDITimeStamp = 0) {
+        // Override in subclass
+    }
+
+    /// Receive pitch wheel value
+    ///
+    /// - Parameters:
+    ///   - pitchWheelValue: MIDI Pitch Wheel Value (0-16383)
+    ///   - channel:         MIDI Channel (1-16)
+    ///
+    open func receivedMIDIPitchWheel(_ pitchWheelValue: MIDIWord,
+                                     channel: MIDIChannel,
+                                     portID: MIDIUniqueID? = nil,
+                                     offset: MIDITimeStamp = 0) {
+        // Override in subclass
     }
 
     // MARK: - MIDI Note Start/Stop
@@ -93,8 +163,9 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///
     @objc open func start(harmonicNoteNumber: HarmonicNoteNumber,
                           velocity: MIDIVelocity,
-                          channel: MIDIChannel) {
-        play(harmonicNoteNumber: harmonicNoteNumber, velocity: velocity)
+                          channel: MIDIChannel,
+                          offset: MIDITimeStamp = 0) {
+        play(harmonicNoteNumber: harmonicNoteNumber, velocity: velocity, channel: channel)
     }
 
     /// Stop a note
@@ -103,22 +174,58 @@ open class AKMIDIInstrument: AKPolyphonicNode, AKMIDIListener {
     ///   - noteNumber: Note number to stop
     ///   - channel:    Channel on which to stop the note
     ///
-    @objc open func stop(harmonicNoteNumber: HarmonicNoteNumber, channel: MIDIChannel) {
-        // OVerride in subclass
+    @objc open func stop(harmonicNoteNumber: HarmonicNoteNumber,
+    channel: MIDIChannel,
+    offset: MIDITimeStamp = 0) {
+        // Override in subclass
+    }
+
+    /// Receive program change
+    ///
+    /// - Parameters:
+    ///   - program:  MIDI Program Value (0-127)
+    ///   - channel:  MIDI Channel (1-16)
+    ///
+    @objc open func receivedMIDIProgramChange(_ program: MIDIByte, channel: MIDIChannel, offset: MIDITimeStamp = 0) {
+        // Override in subclass
     }
 
     // MARK: - Private functions
 
     // Send MIDI data to the audio unit
     func handleMIDI(data1: MIDIByte, data2: MIDIByte, data3: MIDIByte) {
-        let status = data1 >> 4
-        let channel = data1 & 0xF
-        if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 > 0 {
-            start(harmonicNoteNumber: HarmonicNoteNumber(data2),
-                  velocity: MIDIVelocity(data3),
-                  channel: MIDIChannel(channel))
-        } else if Int(status) == AKMIDIStatus.noteOn.rawValue && data3 == 0 {
-            stop(harmonicNoteNumber: HarmonicNoteNumber(data2), channel: MIDIChannel(channel))
+        if let status = AKMIDIStatus(byte: data1), let statusType = status.type {
+
+            let channel = status.channel
+
+            switch statusType {
+            case .noteOn:
+                if data3 > 0 {
+                    start(harmonicNoteNumber: HarmonicNoteNumber(data2), velocity: data3, channel: channel)
+                } else {
+                    stop(harmonicNoteNumber: HarmonicNoteNumber(data2), channel: channel)
+                }
+            case .noteOff:
+                stop(harmonicNoteNumber: HarmonicNoteNumber(data2), channel: channel)
+            case .polyphonicAftertouch:
+                receivedMIDIAftertouch(noteNumber: data2, pressure: data3, channel: channel)
+            case .channelAftertouch:
+                receivedMIDIAftertouch(data2, channel: channel)
+            case .controllerChange:
+                receivedMIDIController(data2, value: data3, channel: channel)
+            case .programChange:
+                receivedMIDIProgramChange(data2, channel: channel)
+            case .pitchWheel:
+                receivedMIDIPitchWheel(MIDIWord(byte1: data2, byte2: data3), channel: channel)
+            }
         }
+    }
+
+    func showVirtualMIDIPort() {
+        MIDIObjectSetIntegerProperty(midiIn, kMIDIPropertyPrivate, 0)
+    }
+
+    func hideVirtualMIDIPort() {
+        MIDIObjectSetIntegerProperty(midiIn, kMIDIPropertyPrivate, 1)
     }
 }

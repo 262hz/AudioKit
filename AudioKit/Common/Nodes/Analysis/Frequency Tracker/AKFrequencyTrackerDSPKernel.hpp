@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Aurelius Prochazka, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #pragma once
@@ -16,8 +16,8 @@ public:
 
     AKFrequencyTrackerDSPKernel() {}
 
-    void init(int _channels, double _sampleRate) override {
-        AKSoundpipeKernel::init(_channels, _sampleRate);
+    void init(int channelCount, double sampleRate) override {
+        AKSoundpipeKernel::init(channelCount, sampleRate);
         sp_ptrack_create(&ptrack);
         sp_ptrack_init(sp, ptrack, hopSize, peakCount);
     }
@@ -80,15 +80,13 @@ public:
     // MARK: Member Variables
 
 private:
-
-    int hopSize = 4096;
-    int peakCount = 20;
-
     sp_ptrack *ptrack = nullptr;
 
 public:
     float trackedAmplitude = 0.0;
     float trackedFrequency = 0.0;
+    int hopSize = 4096;
+    int peakCount = 20;
     bool started = true;
 };
 

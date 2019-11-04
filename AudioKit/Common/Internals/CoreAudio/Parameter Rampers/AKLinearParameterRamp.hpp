@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Andrew Voelkel, revision history on GitHub.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #pragma once
@@ -11,6 +11,8 @@
 #import "AKParameterRampBase.hpp" // have to put this here to get it included in umbrella header
 
 #ifdef __cplusplus
+
+// Currently Unused
 
 struct AKLinearParameterRamp : AKParameterRampBase {
 

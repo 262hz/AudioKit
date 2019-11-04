@@ -2,7 +2,7 @@
 //  SDBoosterAudioUnit.swift
 //  ExtendingAudioKit
 //
-//  Created by Shane Dunne on 1/23/2018
+//  Created by Shane Dunne, revision history on Githbub
 //  Copyright © 2018 AudioKit. All rights reserved.
 //
 
@@ -27,17 +27,17 @@ public class SDBoosterAudioUnit: AKAudioUnitBase {
         didSet { setParameter(.rightGain, value: rightGain) }
     }
 
-    var rampTime: Double = 0.0 {
-        didSet { setParameter(.rampTime, value: rampTime) }
+    var rampDuration: Double = 0.0 {
+        didSet { setParameter(.rampDuration, value: rampDuration) }
     }
 
     public override func initDSP(withSampleRate sampleRate: Double,
-                                 channelCount count: AVAudioChannelCount) -> UnsafeMutableRawPointer! {
+                                 channelCount count: AVAudioChannelCount) -> AKDSPRef {
         return createSDBoosterDSP(Int32(count), sampleRate)
     }
 
-    override init(componentDescription: AudioComponentDescription,
-                  options: AudioComponentInstantiationOptions = []) throws {
+    override public init(componentDescription: AudioComponentDescription,
+                         options: AudioComponentInstantiationOptions = []) throws {
         try super.init(componentDescription: componentDescription, options: options)
 
         let flags: AudioUnitParameterOptions = [.flag_IsReadable, .flag_IsWritable, .flag_CanRamp]

@@ -2,11 +2,11 @@
 //  AKChorus.swift
 //  AudioKit
 //
-//  Created by Shane Dunne
+//  Created by Shane Dunne, revision history on Github.
 //  Copyright © 2018 AudioKit. All rights reserved.
 //
 
-/// Stereo Chorus
+/// Shane's Chorus
 ///
 open class AKChorus: AKNode, AKToggleable, AKComponent, AKInput {
     public typealias AKAudioUnitType = AKChorusAudioUnit
@@ -14,102 +14,79 @@ open class AKChorus: AKNode, AKToggleable, AKComponent, AKInput {
     public static let ComponentDescription = AudioComponentDescription(effect: "chrs")
 
     // MARK: - Properties
-
     private var internalAU: AKAudioUnitType?
-    private var token: AUParameterObserverToken?
-
-    // These must accord with #defines in SDModulatedDelayDSPKernel.hpp
-    public static let frequencyRange = 0.1 ... 10.0
-    public static let depthRange = 0.0 ... 1.0
-    public static let feedbackRange = 0.0 ... 0.95
-    public static let dryWetMixRange = 0.0 ... 1.0
-
-    public static let defaultFrequency = 1.0
-    public static let defaultDepth = 0.25
-    public static let defaultFeedback = 0.0
-    public static let defaultDryWetMix = 0.25
 
     fileprivate var frequencyParameter: AUParameter?
     fileprivate var depthParameter: AUParameter?
     fileprivate var feedbackParameter: AUParameter?
     fileprivate var dryWetMixParameter: AUParameter?
 
-    /// Ramp Time represents the speed at which parameters are allowed to change
-    @objc open dynamic var rampTime: Double = AKSettings.rampTime {
+    public static let frequencyRange = Double(kAKChorus_MinFrequency) ... Double(kAKChorus_MaxFrequency)
+    public static let depthRange = Double(kAKChorus_MinDepth) ... Double(kAKChorus_MaxDepth)
+    public static let feedbackRange = Double(kAKChorus_MinFeedback) ... Double(kAKChorus_MaxFeedback)
+    public static let dryWetMixRange = Double(kAKChorus_MinDryWetMix) ... Double(kAKChorus_MaxDryWetMix)
+
+    public static let defaultFrequency = Double(kAKChorus_DefaultFrequency)
+    public static let defaultDepth = Double(kAKChorus_DefaultDepth)
+    public static let defaultFeedback = Double(kAKChorus_DefaultFeedback)
+    public static let defaultDryWetMix = Double(kAKChorus_DefaultDryWetMix)
+
+    /// Ramp Duration represents the speed at which parameters are allowed to change
+    @objc open dynamic var rampDuration: Double = AKSettings.rampDuration {
         willSet {
-            internalAU?.rampTime = newValue
+            internalAU?.rampDuration = newValue
         }
     }
 
     /// Modulation Frequency (Hz)
     @objc open dynamic var frequency: Double = defaultFrequency {
         willSet {
-            if frequency == newValue {
+            guard frequency != newValue else { return }
+            if internalAU?.isSetUp == true {
+                frequencyParameter?.value = AUValue(newValue)
                 return
             }
 
-            if internalAU?.isSetUp ?? false {
-                if token != nil && frequencyParameter != nil {
-                    frequencyParameter?.setValue(Float(newValue), originator: token!)
-                    return
-                }
-            }
-
-            internalAU?.frequency = newValue
+            internalAU?.setParameterImmediately(.frequency, value: newValue)
         }
     }
 
     /// Modulation Depth (fraction)
     @objc open dynamic var depth: Double = defaultDepth {
         willSet {
-            if depth == newValue {
+            guard depth != newValue else { return }
+            if internalAU?.isSetUp == true {
+                depthParameter?.value = AUValue(newValue)
                 return
             }
 
-            if internalAU?.isSetUp ?? false {
-                if token != nil && depthParameter != nil {
-                    depthParameter?.setValue(Float(newValue), originator: token!)
-                    return
-                }
-            }
-
-            internalAU?.depth = newValue
+            internalAU?.setParameterImmediately(.depth, value: newValue)
         }
     }
 
     /// Feedback (fraction)
     @objc open dynamic var feedback: Double = defaultFeedback {
         willSet {
-            if feedback == newValue {
+            guard feedback != newValue else { return }
+            if internalAU?.isSetUp == true {
+                feedbackParameter?.value = AUValue(newValue)
                 return
             }
 
-            if internalAU?.isSetUp ?? false {
-                if token != nil && feedbackParameter != nil {
-                    feedbackParameter?.setValue(Float(newValue), originator: token!)
-                    return
-                }
-            }
-
-            internalAU?.feedback = newValue
+            internalAU?.setParameterImmediately(.feedback, value: newValue)
         }
     }
 
     /// Dry Wet Mix (fraction)
     @objc open dynamic var dryWetMix: Double = defaultDryWetMix {
         willSet {
-            if dryWetMix == newValue {
+            guard dryWetMix != newValue else { return }
+            if internalAU?.isSetUp == true {
+                dryWetMixParameter?.value = AUValue(newValue)
                 return
             }
 
-            if internalAU?.isSetUp ?? false {
-                if token != nil && dryWetMixParameter != nil {
-                    dryWetMixParameter?.setValue(Float(newValue), originator: token!)
-                    return
-                }
-            }
-
-            internalAU?.dryWetMix = newValue
+            internalAU?.setParameterImmediately(.dryWetMix, value: newValue)
         }
     }
 
@@ -134,7 +111,8 @@ open class AKChorus: AKNode, AKToggleable, AKComponent, AKInput {
         frequency: Double = defaultFrequency,
         depth: Double = defaultDepth,
         feedback: Double = defaultFeedback,
-        dryWetMix: Double = defaultDryWetMix) {
+        dryWetMix: Double = defaultDryWetMix
+    ) {
 
         self.frequency = frequency
         self.depth = depth
@@ -149,10 +127,10 @@ open class AKChorus: AKNode, AKToggleable, AKComponent, AKInput {
                 AKLog("Error: self is nil")
                 return
             }
+            strongSelf.avAudioUnit = avAudioUnit
             strongSelf.avAudioNode = avAudioUnit
             strongSelf.internalAU = avAudioUnit.auAudioUnit as? AKAudioUnitType
-
-            input?.connect(to: self!)
+            input?.connect(to: strongSelf)
         }
 
         guard let tree = internalAU?.parameterTree else {
@@ -160,37 +138,26 @@ open class AKChorus: AKNode, AKToggleable, AKComponent, AKInput {
             return
         }
 
-        self.frequencyParameter = tree["frequency"]
-        self.depthParameter = tree["depth"]
-        self.feedbackParameter = tree["feedback"]
-        self.dryWetMixParameter = tree["dryWetMix"]
+        frequencyParameter = tree["frequency"]
+        depthParameter = tree["depth"]
+        feedbackParameter = tree["feedback"]
+        dryWetMixParameter = tree["dryWetMix"]
 
-        token = tree.token(byAddingParameterObserver: { [weak self] _, _ in
-
-            guard let _ = self else {
-                AKLog("Unable to create strong reference to self")
-                return
-            } // Replace _ with strongSelf if needed
-            DispatchQueue.main.async {
-                // This node does not change its own values so we won't add any
-                // value observing, but if you need to, this is where that goes.
-            }
-        })
-        self.internalAU?.setParameterImmediately(.frequency, value: frequency)
-        self.internalAU?.setParameterImmediately(.depth, value: depth)
-        self.internalAU?.setParameterImmediately(.feedback, value: feedback)
-        self.internalAU?.setParameterImmediately(.dryWetMix, value: dryWetMix)
+        internalAU?.setParameterImmediately(.frequency, value: frequency)
+        internalAU?.setParameterImmediately(.depth, value: depth)
+        internalAU?.setParameterImmediately(.feedback, value: feedback)
+        internalAU?.setParameterImmediately(.dryWetMix, value: dryWetMix)
     }
 
     // MARK: - Control
 
     /// Function to start, play, or activate the node, all do the same thing
     @objc open func start() {
-        AKLog("start() \(isStopped)")
+        internalAU?.start()
     }
 
     /// Function to stop or bypass the node, both are equivalent
     @objc open func stop() {
-        AKLog("stop() \(isPlaying)")
+        internalAU?.stop()
     }
 }

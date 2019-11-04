@@ -3,8 +3,9 @@
 //  AudioKit for iOS
 //
 //  Created by Aurelius Prochazka, revision history on Github.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
+import AudioKit
 
 /// View to choose from audio files to use in playgrounds
 @IBDesignable open class AKResourcesAudioFileLoaderView: UIView {
@@ -113,31 +114,43 @@
 
     // Default background color per theme
     var bgColorForTheme: AKColor {
-        if let bgColor = bgColor { return bgColor }
+        if let bgColor = bgColor {
+            return bgColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.8, alpha: 1.0)
-        case .midnight: return AKColor(white: 0.7, alpha: 1.0)
+        case .basic:
+            return AKColor(white: 0.8, alpha: 1.0)
+        case .midnight:
+            return AKColor(white: 0.7, alpha: 1.0)
         }
     }
 
     // Default border color per theme
     var borderColorForTheme: AKColor {
-        if let borderColor = borderColor { return borderColor }
+        if let borderColor = borderColor {
+            return borderColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.3, alpha: 1.0).withAlphaComponent(0.8)
-        case .midnight: return AKColor.white.withAlphaComponent(0.8)
+        case .basic:
+            return AKColor(white: 0.3, alpha: 1.0).withAlphaComponent(0.8)
+        case .midnight:
+            return AKColor.white.withAlphaComponent(0.8)
         }
     }
 
     // Default text color per theme
     var textColorForTheme: AKColor {
-        if let textColor = textColor { return textColor }
+        if let textColor = textColor {
+            return textColor
+        }
 
         switch AKStylist.sharedInstance.theme {
-        case .basic: return AKColor(white: 0.3, alpha: 1.0)
-        case .midnight: return AKColor.white
+        case .basic:
+            return AKColor(white: 0.3, alpha: 1.0)
+        case .midnight:
+            return AKColor.white
         }
     }
 
@@ -170,10 +183,11 @@
         stopOuterPath.fill()
 
         //// stopInner Drawing
-        let stopInnerPath = UIBezierPath(roundedRect: CGRect(x: (rect.width * 0.13 - rect.height * 0.5) / 2 + cornerRadius,
-                                                             y: rect.height * 0.25,
-                                                             width: rect.height * 0.5,
-                                                             height: rect.height * 0.5), cornerRadius: cornerRadius)
+        let stopInnerPath = UIBezierPath(roundedRect:
+            CGRect(x: (rect.width * 0.13 - rect.height * 0.5) / 2 + cornerRadius,
+                   y: rect.height * 0.25,
+                   width: rect.height * 0.5,
+                   height: rect.height * 0.5), cornerRadius: cornerRadius)
         dark.setFill()
         stopInnerPath.fill()
 
@@ -187,7 +201,8 @@
         playOuterPath.fill()
 
         //// playInner Drawing
-        let playRect = CGRect(x: (rect.width * 0.13 - rect.height * 0.5) / 2 + borderWidth + rect.width * 0.13 + borderWidth,
+        let playRect = CGRect(x: (rect.width * 0.13 - rect.height * 0.5) / 2 +
+            borderWidth + rect.width * 0.13 + borderWidth,
                               y: rect.height * 0.25,
                               width: rect.height * 0.5,
                               height: rect.height * 0.5)
@@ -214,16 +229,20 @@
 
         // stopButton border Path
         let stopButtonBorderPath = UIBezierPath()
-        stopButtonBorderPath.move(to: CGPoint(x: rect.width * 0.13 + borderWidth, y: borderWidth))
-        stopButtonBorderPath.addLine(to: CGPoint(x: rect.width * 0.13 + borderWidth, y: rect.height - borderWidth))
+        stopButtonBorderPath.move(to: CGPoint(x: rect.width * 0.13 + borderWidth,
+                                              y: borderWidth))
+        stopButtonBorderPath.addLine(to: CGPoint(x: rect.width * 0.13 + borderWidth,
+                                                 y: rect.height - borderWidth))
         borderColorForTheme.setStroke()
         stopButtonBorderPath.lineWidth = borderWidth / 2.0
         stopButtonBorderPath.stroke()
 
         // playButton border Path
         let playButtonBorderPath = UIBezierPath()
-        playButtonBorderPath.move(to: CGPoint(x: rect.width * 0.13 * 2.0 + borderWidth, y: borderWidth))
-        playButtonBorderPath.addLine(to: CGPoint(x: rect.width * 0.13 * 2.0 + borderWidth, y: rect.height - borderWidth))
+        playButtonBorderPath.move(to: CGPoint(x: rect.width * 0.13 * 2.0 + borderWidth,
+                                              y: borderWidth))
+        playButtonBorderPath.addLine(to: CGPoint(x: rect.width * 0.13 * 2.0 + borderWidth,
+                                                 y: rect.height - borderWidth))
         borderColorForTheme.setStroke()
         playButtonBorderPath.lineWidth = borderWidth / 2.0
         playButtonBorderPath.stroke()
@@ -300,9 +319,9 @@
         let nameLabelStyle = NSMutableParagraphStyle()
         nameLabelStyle.alignment = .left
 
-        let nameLabelFontAttributes = [NSAttributedStringKey.font: UIFont.boldSystemFont(ofSize: 24.0),
-                                       NSAttributedStringKey.foregroundColor: textColorForTheme,
-                                       NSAttributedStringKey.paragraphStyle: nameLabelStyle]
+        let nameLabelFontAttributes = [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 24.0),
+                                       NSAttributedString.Key.foregroundColor: textColorForTheme,
+                                       NSAttributedString.Key.paragraphStyle: nameLabelStyle]
 
         let nameLabelInset: CGRect = nameLabelRect.insetBy(dx: 10, dy: 0)
         let nameLabelTextHeight: CGFloat = NSString(string: fileName).boundingRect(

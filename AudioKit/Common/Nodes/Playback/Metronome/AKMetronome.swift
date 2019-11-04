@@ -3,7 +3,7 @@
 //  AudioKit
 //
 //  Created by Aurelius Prochazka, revision history on GitHub.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 /// Metronome Callback Ugen
@@ -16,7 +16,7 @@ public let callbackUgen =
             }
         }
         stack.push(trigger)
-}
+    }
 
 /// Useful metronome class that you can utilize for your own projects
 public class AKMetronome: AKOperationGenerator {
@@ -36,7 +36,7 @@ public class AKMetronome: AKOperationGenerator {
     /// The value of the current beat
     public var currentBeat: Int {
         get { return 1 + Int((parameters[2] + 1).truncatingRemainder(dividingBy: Double(subdivision))) }
-        set(newValue) { parameters[2] = Double(newValue) }
+        set { parameters[2] = Double(newValue) }
     }
 
     /// Function to perform on every tick

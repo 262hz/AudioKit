@@ -3,59 +3,82 @@
 //  AudioKit
 //
 //  Created by Andrew Voelkel, revision history on GitHub.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #import "AKAudioUnitBase.h"
-#import "BufferedAudioBus.hpp"
-
 #import <AudioKit/AudioKit-Swift.h>
 
-@interface AKAudioUnitBase ()
+@implementation AKAudioUnitBase
 
-@property AKDSPBase* kernel;
-
-@end
-
-@implementation AKAudioUnitBase {
-    // C++ members need to be ivars; they would be copied on access if they were properties.
-    BufferedInputBus _inputBus;
-    AKDSPBase* _kernel;
+// Convenience for casting (AKDSPRef)_dsp to AKDSPBase;
+- (AKDSPBase *)kernel {
+    return (AKDSPBase *)_dsp;
 }
 
 @synthesize parameterTree = _parameterTree;
 
-- (float) getParameterWithAddress: (AUParameterAddress) address; {
-    return _kernel->getParameter(address);
-}
-- (void) setParameterWithAddress:(AUParameterAddress)address value:(AUValue)value {
-    _kernel->setParameter(address, value);
+- (AUValue)parameterWithAddress:(AUParameterAddress)address {
+    return self.kernel->getParameter(address);
 }
 
-- (void) setParameterImmediatelyWithAddress:(AUParameterAddress)address value:(AUValue)value {
-    _kernel->setParameter(address, value, true);
+- (void)setParameterWithAddress:(AUParameterAddress)address value:(AUValue)value {
+    self.kernel->setParameter(address, value);
 }
 
-- (void)start { _kernel->start(); }
-- (void)stop { _kernel->stop(); }
-- (void)clear { _kernel->clear(); };
-- (void)initializeConstant:(AUValue)value { _kernel->initializeConstant(value); }
-- (BOOL)isPlaying { return _kernel->isPlaying(); }
-- (BOOL)isSetUp { return _kernel->isSetup(); }
+- (void)setParameterImmediatelyWithAddress:(AUParameterAddress)address value:(AUValue)value {
+    self.kernel->setParameter(address, value, true);
+}
+
+- (void)start {
+    self.kernel->start();
+}
+
+- (void)stop {
+    self.kernel->stop();
+}
+
+- (void)clear {
+    self.kernel->clear();
+}
+
+- (void)initializeConstant:(AUValue)value {
+    self.kernel->initializeConstant(value);
+}
+
+- (BOOL)isPlaying {
+    return self.kernel->isPlaying();
+}
+
+- (BOOL)isSetUp {
+    return self.kernel->isSetup();
+}
+
 - (void)setupWaveform:(int)size {
-    _kernel->setupWaveform((uint32_t)size);
+    self.kernel->setupWaveform((uint32_t)size);
 }
-- (void)setWaveformValue:(float)value atIndex:(UInt32)index; {
-    _kernel->setWaveformValue(index, value);
+
+- (void)setWaveformValue:(float)value atIndex:(UInt32)index {
+    self.kernel->setWaveformValue(index, value);
+}
+- (void)setupAudioFileTable:(float *)data size:(UInt32)size {
+    self.kernel->setUpTable(data, size);
+}
+
+- (void)setPartitionLength:(int)partitionLength {
+    self.kernel->setPartitionLength(partitionLength);
+}
+
+- (void)initConvolutionEngine {
+    self.kernel->initConvolutionEngine();
 }
 
 /**
  This should be overridden. All the base class does is make sure that the pointer to the
  DSP is invalid.
  */
-
-- (void*)initDSPWithSampleRate:(double) sampleRate channelCount:(AVAudioChannelCount) count {
-    return (void*)(_kernel = NULL);
+- (AKDSPRef)initDSPWithSampleRate:(double)sampleRate channelCount:(AVAudioChannelCount)count {
+    return (_dsp = NULL);
 }
 
 /**
@@ -67,11 +90,11 @@
  Otherwise, this code is just the same as what is in the Apple example code init function.
  */
 
-- (void) setParameterTree: (AUParameterTree*) tree {
+- (void)setParameterTree:(AUParameterTree *)tree {
     _parameterTree = tree;
 
     // Make a local pointer to the kernel to avoid capturing self.
-    __block AKDSPBase *kernel = _kernel;
+    __block AKDSPBase *kernel = self.kernel;
 
     // implementorValueObserver is called when a parameter changes value.
     _parameterTree.implementorValueObserver = ^(AUParameter *param, AUValue value) {
@@ -99,43 +122,23 @@
 - (instancetype)initWithComponentDescription:(AudioComponentDescription)componentDescription
                                      options:(AudioComponentInstantiationOptions)options
                                        error:(NSError **)outError {
-
     self = [super initWithComponentDescription:componentDescription options:options error:outError];
-    if (self == nil) { return nil; }
+    if (self == nil) {
+        return nil;
+    }
 
     // Initialize a default format for the busses.
-    AVAudioFormat *defaultFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:AKSettings.sampleRate
-                                                                                  channels:AKSettings.numberOfChannels];
+    AVAudioFormat *arbitraryFormat = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:AKSettings.sampleRate
+                                                                                    channels:AKSettings.channelCount];
 
-    _kernel = (AKDSPBase*)[self initDSPWithSampleRate:defaultFormat.sampleRate
-                                         channelCount:defaultFormat.channelCount];
-
-    // Create the input and output busses.
-    _inputBus.init(defaultFormat, 8);
-    _outputBus = [[AUAudioUnitBus alloc] initWithFormat:defaultFormat error:nil];
-
-    // Create the input and output bus arrays.
-    _inputBusArray  = [[AUAudioUnitBusArray alloc] initWithAudioUnit:self
-                                                             busType:AUAudioUnitBusTypeInput
-                                                              busses: @[_inputBus.bus]];
-
-    _outputBusArray = [[AUAudioUnitBusArray alloc] initWithAudioUnit:self
-                                                             busType:AUAudioUnitBusTypeOutput
-                                                              busses: @[self.outputBus]];
+    _dsp = [self initDSPWithSampleRate:arbitraryFormat.sampleRate
+                          channelCount:arbitraryFormat.channelCount];
 
     // Create a default empty parameter tree.
-    _parameterTree = [AUParameterTree createTreeWithChildren:@[]];
-
-    self.maximumFramesToRender = 512;
+    _parameterTree = [AUParameterTree treeWithChildren:@[]];
 
     return self;
 }
-
-// ----- BEGIN UNMODIFIED COPY FROM APPLE CODE -----
-
-- (AUAudioUnitBusArray *)inputBusses { return _inputBusArray; }
-
-- (AUAudioUnitBusArray *)outputBusses { return _outputBusArray; }
 
 // Allocate resources required to render.
 // Hosts must call this to initialize the AU before beginning to render.
@@ -144,82 +147,31 @@
         return NO;
     }
 
-    if (self.outputBus.format.channelCount != _inputBus.bus.format.channelCount) {
-        if (outError) {
-            *outError = [NSError errorWithDomain:NSOSStatusErrorDomain code:kAudioUnitErr_FailedInitialization userInfo:nil];
-        }
-        // Notify superclass that initialization was not successful
-        self.renderResourcesAllocated = NO;
-        return NO;
-    }
+    AVAudioFormat *format = self.outputBusses[0].format;
+    self.kernel->init(format.channelCount, format.sampleRate);
+    self.kernel->reset();
 
-    _inputBus.allocateRenderResources(self.maximumFramesToRender);
-    _kernel->init(self.outputBus.format.channelCount, self.outputBus.format.sampleRate);
-    _kernel->reset();
     return YES;
+}
+
+- (ProcessEventsBlock)processEventsBlock:(AVAudioFormat *)format {
+    __block AKDSPBase *kernel = self.kernel;
+    return ^(AudioBufferList *inBuffer,
+             AudioBufferList *outBuffer,
+             const AudioTimeStamp *timestamp,
+             AVAudioFrameCount frameCount,
+             const AURenderEvent *eventListHead) {
+               kernel->setBuffers(inBuffer, outBuffer);
+               kernel->processWithEvents(timestamp, frameCount, eventListHead);
+    };
 }
 
 // Deallocate resources allocated by allocateRenderResourcesAndReturnError:
 // Hosts should call this after finishing rendering.
 
 - (void)deallocateRenderResources {
-    _inputBus.deallocateRenderResources();
-    _kernel->deinit();
+    self.kernel->deinit();
     [super deallocateRenderResources];
-}
-
-// Subclassers must provide a AUInternalRenderBlock (via a getter) to implement rendering.
-
-- (AUInternalRenderBlock)internalRenderBlock {
-    // Capture in locals to avoid ObjC member lookups.
-    // Specify captured objects are mutable.
-    __block AKDSPBase *state = _kernel;
-    __block BufferedInputBus *input = &_inputBus;
-
-    return ^AUAudioUnitStatus(
-                              AudioUnitRenderActionFlags *actionFlags,
-                              const AudioTimeStamp       *timestamp,
-                              AVAudioFrameCount           frameCount,
-                              NSInteger                   outputBusNumber,
-                              AudioBufferList            *outputData,
-                              const AURenderEvent        *realtimeEventListHead,
-                              AURenderPullInputBlock      pullInputBlock) {
-        AudioUnitRenderActionFlags pullFlags = 0;
-
-        AUAudioUnitStatus err = input->pullInput(&pullFlags, timestamp, frameCount, 0, pullInputBlock);
-
-        if (err != 0) { return err; }
-
-        AudioBufferList *inAudioBufferList = input->mutableAudioBufferList;
-
-        /*
-         Important:
-         If the caller passed non-null output pointers (outputData->mBuffers[x].mData), use those.
-
-         If the caller passed null output buffer pointers, process in memory owned by the Audio Unit
-         and modify the (outputData->mBuffers[x].mData) pointers to point to this owned memory.
-         The Audio Unit is responsible for preserving the validity of this memory until the next call to render,
-         or deallocateRenderResources is called.
-
-         If your algorithm cannot process in-place, you will need to preallocate an output buffer
-         and use it here.
-
-         See the description of the canProcessInPlace property.
-         */
-
-        // If passed null output buffer pointers, process in-place in the input buffer.
-        AudioBufferList *outAudioBufferList = outputData;
-        if (outAudioBufferList->mBuffers[0].mData == nullptr) {
-            for (UInt32 i = 0; i < outAudioBufferList->mNumberBuffers; ++i) {
-                outAudioBufferList->mBuffers[i].mData = inAudioBufferList->mBuffers[i].mData;
-            }
-        }
-
-        state->setBuffers(inAudioBufferList, outAudioBufferList);
-        state->processWithEvents(timestamp, frameCount, realtimeEventListHead);
-
-        return noErr;
-    };
 }
 
 // Expresses whether an audio unit can process in place.
@@ -229,13 +181,15 @@
 // buffer list. The audio unit may process in-place in the input buffers.
 // See the discussion of renderBlock.
 // Partially bridged to the v2 property kAudioUnitProperty_InPlaceProcessing, the v3 property is not settable.
+// Should be overriden in subclasses
 - (BOOL)canProcessInPlace {
     return NO;   // OK THIS IS DIFFERENT FROM APPLE EXAMPLE CODE
 }
 
 // ----- END UNMODIFIED COPY FROM APPLE CODE -----
 
-
-
+- (void)dealloc {
+    delete self.kernel;
+}
 
 @end

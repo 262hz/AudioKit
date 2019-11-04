@@ -2,8 +2,8 @@
 //  AKStereoFieldLimiterDSP.hpp
 //  AudioKit
 //
-//  Created by Andrew Voelkel on 9/23/17.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Created by Andrew Voelkel, revision history on Github.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 #pragma once
@@ -12,27 +12,20 @@
 
 typedef NS_ENUM(AUParameterAddress, AKStereoFieldLimiterParameter) {
     AKStereoFieldLimiterParameterAmount,
-    AKStereoFieldLimiterParameterRampTime
+    AKStereoFieldLimiterParameterRampDuration
 };
 
 #import "AKLinearParameterRamp.hpp"  // have to put this here to get it included in umbrella header
 
 #ifndef __cplusplus
 
-void* createStereoFieldLimiterDSP(int nChannels, double sampleRate);
+AKDSPRef createStereoFieldLimiterDSP(int channelCount, double sampleRate);
 
 #else
 
 #import <AudioToolbox/AudioToolbox.h>
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
-
-/**
- A butt simple DSP kernel. Most of the plumbing is in the base class. All the code at this
- level has to do is supply the core of the rendering code. A less trivial example would probably
- need to coordinate the updating of DSP parameters, which would probably involve thread locks,
- etc.
- */
 
 struct AKStereoFieldLimiterDSP : AKDSPBase {
 
@@ -52,8 +45,8 @@ public:
             case AKStereoFieldLimiterParameterAmount:
                 amountRamp.setTarget(value, immediate);
                 break;
-            case AKStereoFieldLimiterParameterRampTime:
-                amountRamp.setRampTime(value, _sampleRate);
+            case AKStereoFieldLimiterParameterRampDuration:
+                amountRamp.setRampDuration(value, sampleRate);
                 break;
         }
     }
@@ -63,8 +56,8 @@ public:
         switch (address) {
             case AKStereoFieldLimiterParameterAmount:
                 return amountRamp.getTarget();
-            case AKStereoFieldLimiterParameterRampTime:
-                return amountRamp.getRampTime(_sampleRate);
+            case AKStereoFieldLimiterParameterRampDuration:
+                return amountRamp.getRampDuration(sampleRate);
         }
         return 0;
     }
@@ -79,21 +72,21 @@ public:
             int frameOffset = int(frameIndex + bufferOffset);
             // do ramping every 8 samples
             if ((frameOffset & 0x7) == 0) {
-                amountRamp.advanceTo(_now + frameOffset);
+                amountRamp.advanceTo(now + frameOffset);
             }
             float amount = amountRamp.getValue();
 
-            if (!_playing) {
-                _outBufferListPtr->mBuffers[0] = _inBufferListPtr->mBuffers[0];
-                _outBufferListPtr->mBuffers[1] = _inBufferListPtr->mBuffers[1];
+            if (!isStarted) {
+                outBufferListPtr->mBuffers[0] = inBufferListPtr->mBuffers[0];
+                outBufferListPtr->mBuffers[1] = inBufferListPtr->mBuffers[1];
                 return;
             }
 
             float *tmpin[2];
             float *tmpout[2];
-            for (int channel = 0; channel < _nChannels; ++channel) {
-                float *in  = (float *)_inBufferListPtr->mBuffers[channel].mData  + frameOffset;
-                float *out = (float *)_outBufferListPtr->mBuffers[channel].mData + frameOffset;
+            for (int channel = 0; channel < channelCount; ++channel) {
+                float *in  = (float *)inBufferListPtr->mBuffers[channel].mData  + frameOffset;
+                float *out = (float *)outBufferListPtr->mBuffers[channel].mData + frameOffset;
                 if (channel < 2) {
                     tmpin[channel] = in;
                     tmpout[channel] = out;

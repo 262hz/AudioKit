@@ -2,8 +2,8 @@
 //  AKPlaygroundViewController.swift
 //  AudioKit For macOS
 //
-//  Created by Aurelius Prochazka on 8/20/17.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Created by Aurelius Prochazka, revision history on Githbub.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
 import Cocoa
@@ -50,6 +50,7 @@ public class AKLiveViewController: NSViewController {
 
         newView.heightAnchor.constraint(equalToConstant: 60).isActive = true
         stackView?.addArrangedSubview(newView)
-        stackView.setFrameSize(NSSize(width: stackView.frame.width, height: stackView.frame.height + newView.frame.height))
+        stackView.setFrameSize(NSSize(width: stackView.frame.width,
+                                      height: stackView.frame.height + newView.frame.height))
     }
 }

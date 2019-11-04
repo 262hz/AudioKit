@@ -1,18 +1,19 @@
 //
 //  AKInterop.h
-//  AudioKit For iOS
+//  AudioKit
 //
 //  Created by David O'Neill, revision history on GitHub.
-//  Copyright © 2017 AudioKit. All rights reserved.
+//  Copyright © 2018 AudioKit. All rights reserved.
 //
 
-#ifndef AKInterop_h
-#define AKInterop_h
+#pragma once
 
 #ifdef __OBJC__
 #define AK_ENUM(a) enum __attribute__((enum_extensibility(open))) a : int
+#define AK_SWIFT_TYPE __attribute((swift_newtype(struct)))
 #else
 #define AK_ENUM(a) enum a
+#define AK_SWIFT_TYPE
 #endif
 
 /* EXAMPLE
@@ -29,4 +30,6 @@
  let direction: AKDirection = .up
 */
 
-#endif /* AKInterop_h */
+/** Pointer to an instance of an AKDSPBase subclass */
+typedef void* AKDSPRef AK_SWIFT_TYPE;
+
