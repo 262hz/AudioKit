@@ -9,6 +9,8 @@
 import UIKit
 import AudioKit
 
+// swiftlint:disable file_length
+
 /// Style of knob to use
 public enum AKRotaryKnobStyle {
     /// Circular knob
@@ -411,3 +413,5 @@ public enum AKRotaryKnobStyle {
         return path
     }
 }
+
+// swiftlint:enable file_length

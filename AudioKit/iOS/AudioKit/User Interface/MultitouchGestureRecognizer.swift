@@ -6,7 +6,6 @@
 //  Copyright © 2015 Daniel Clelland. All rights reserved.
 //
 
-import UIKit
 import UIKit.UIGestureRecognizerSubclass
 import AudioKit
 
@@ -49,6 +48,8 @@ open class MultitouchGestureRecognizer: UIGestureRecognizer {
     /// The touch management mode.
     public var mode: Mode = .stack
 
+    // swiftlint:disable empty_count
+
     /// The maximum number of touches allowed in the stack/queue. Defaults to `0`, signifying unlimited touches.
     /// If `count` is decreased past the current number of touches, any excess touches will be ended immediately.
     public var count: Int = 0 {
@@ -69,6 +70,8 @@ open class MultitouchGestureRecognizer: UIGestureRecognizer {
             }
         }
     }
+
+    // swiftlint:enable empty_count
 
     /// If `sustain` is set to `true`, when touches end they will be retained in `touches` until such time as all
     /// touches have ended and a new touch begins.
@@ -180,6 +183,8 @@ open class MultitouchGestureRecognizer: UIGestureRecognizer {
 
     // MARK: - Single touches
 
+    // swiftlint:disable empty_count
+
     private func start(_ touch: UITouch) {
         guard count == 0 || count > touches.count else {
             if let firstTouch = touches.first, mode == .queue {
@@ -192,6 +197,8 @@ open class MultitouchGestureRecognizer: UIGestureRecognizer {
         touches.append(touch)
         multitouchDelegate?.multitouchGestureRecognizer?(self, touchDidBegin: touch)
     }
+
+    // swiftlint:enable empty_count
 
     private func move(_ touch: UITouch) {
         if touches.contains(touch) {

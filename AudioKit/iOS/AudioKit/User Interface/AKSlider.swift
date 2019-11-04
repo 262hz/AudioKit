@@ -7,6 +7,8 @@
 //
 import AudioKit
 
+// swiftlint:disable file_length
+
 /// Different looks the slider can have
 public enum AKSliderStyle {
     /// Uses a circle for the touch point
@@ -415,3 +417,5 @@ public enum AKSliderStyle {
         }
     }
 }
+
+// swiftlint:enable file_length
